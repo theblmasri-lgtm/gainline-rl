@@ -1,0 +1,3092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gainline RL">
+<title>Gainline RL — Rugby League Coaching</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Oswald:wght@400;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  /* ── Core brand colours — overridable per club in Stage 3 ── */
+  /* These are the Gainline defaults (Sherburn Bears navy + red).
+     In Stage 3, applyTheme() will overwrite these from the
+     club's Supabase profile, instantly repainting the whole app. */
+  --primary:#1a3c8f;      /* main brand colour — navs, buttons, headers */
+  --primary-dk:#112a6b;   /* darker shade — gradients, pressed states */
+  --primary-dp:#0a1a45;   /* deepest shade — header background */
+  --accent:#cc1a2e;       /* accent colour — CTAs, active states, logo */
+  --accent-dk:#a01222;    /* darker accent */
+
+  /* Aliases so existing code keeps working unchanged */
+  --blue:var(--primary);
+  --blue-dk:var(--primary-dk);
+  --blue-dp:var(--primary-dp);
+  --red:var(--accent);
+  --red-dk:var(--accent-dk);
+
+  --white:#ffffff;--off:#f2f5fb;--lt-blue:#e4eaf8;
+  --border:#c8d3ec;--grey:#5a6580;--grey-lt:#8a94a8;--text:#0f1e3d;
+  --green:#166534;--green-lt:#d1fae5;
+  --amber:#92400e;--amber-lt:#fef3c7;
+  --sh-sm:0 1px 4px rgba(10,26,69,.10);--sh-md:0 3px 12px rgba(10,26,69,.14);--sh-lg:0 8px 28px rgba(10,26,69,.18);
+  --r:14px;--r-sm:8px;--tr:.18s ease;
+}
+.h-logo{display:flex;align-items:center;line-height:1}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;width:100%;font-family:'DM Sans',system-ui,sans-serif;background:var(--off);color:var(--text);overscroll-behavior:none;-webkit-font-smoothing:antialiased}
+a,button,input,select,textarea,label{pointer-events:auto;cursor:pointer}
+input,textarea{cursor:text}
+
+/* ── APP SHELL ──────────────────────────────── */
+#app{display:flex;flex-direction:column;height:100vh;max-width:500px;margin:0 auto;position:relative}
+
+/* ── AUTH SCREENS ───────────────────────────── */
+.auth-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;background:linear-gradient(160deg,var(--blue-dp) 0%,var(--blue-dk) 50%,#1a0a2e 100%);position:relative;overflow:hidden;cursor:default}
+.auth-wrap::before{content:'';position:absolute;inset:0;opacity:.08;pointer-events:none;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 500 120'%3E%3Crect x='20' y='10' width='460' height='100' rx='2' fill='none' stroke='white' stroke-width='1.5'/%3E%3Cline x1='250' y1='10' x2='250' y2='110' stroke='white' stroke-width='1'/%3E%3Cline x1='100' y1='10' x2='100' y2='110' stroke='white' stroke-width='.8'/%3E%3Cline x1='400' y1='10' x2='400' y2='110' stroke='white' stroke-width='.8'/%3E%3Cline x1='55' y1='10' x2='55' y2='110' stroke='white' stroke-width='1'/%3E%3Cline x1='445' y1='10' x2='445' y2='110' stroke='white' stroke-width='1'/%3E%3Cline x1='42' y1='10' x2='42' y2='30' stroke='white' stroke-width='1.2'/%3E%3Cline x1='68' y1='10' x2='68' y2='30' stroke='white' stroke-width='1.2'/%3E%3Cline x1='36' y1='30' x2='74' y2='30' stroke='white' stroke-width='1.2'/%3E%3Cline x1='432' y1='10' x2='432' y2='30' stroke='white' stroke-width='1.2'/%3E%3Cline x1='458' y1='10' x2='458' y2='30' stroke='white' stroke-width='1.2'/%3E%3Cline x1='426' y1='30' x2='464' y2='30' stroke='white' stroke-width='1.2'/%3E%3C/svg%3E") center/cover no-repeat}
+.auth-logo{font-family:'Barlow Condensed','Oswald',sans-serif;font-size:2.2rem;font-weight:800;color:var(--white);letter-spacing:.08em;text-align:center;margin-bottom:4px;text-shadow:0 2px 16px rgba(0,0,0,.5)}
+.auth-logo span{color:var(--red)}
+.auth-sub{font-size:.75rem;color:rgba(255,255,255,.45);letter-spacing:.18em;text-transform:uppercase;text-align:center;margin-bottom:32px}
+.auth-card{background:rgba(255,255,255,.97);border-radius:var(--r);padding:24px;width:100%;max-width:360px;box-shadow:var(--sh-lg)}
+.auth-title{font-family:'Oswald',sans-serif;font-size:1.1rem;font-weight:700;color:var(--blue-dk);margin-bottom:16px;letter-spacing:.04em}
+.auth-field{margin-bottom:14px}
+.auth-field label{display:block;font-size:.7rem;font-weight:600;color:var(--grey);margin-bottom:4px;text-transform:uppercase;letter-spacing:.07em;font-family:'Oswald',sans-serif}
+.auth-field input{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:.95rem;font-family:'DM Sans',sans-serif;background:var(--off);color:var(--text);transition:border-color var(--tr)}
+.auth-field input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,60,143,.12)}
+.auth-switch{font-size:.8rem;color:var(--grey);text-align:center;margin-top:14px}
+.auth-switch a{color:var(--blue);text-decoration:none;font-weight:600;cursor:pointer}
+.role-tip-icon{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--blue);color:white;font-size:.6rem;cursor:pointer;font-style:normal;flex-shrink:0;user-select:none}
+.role-tip-box{display:none;background:var(--lt-blue);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:10px;font-size:.78rem;color:var(--text);line-height:1.5}
+.role-tip-box.show{display:block}
+.role-tip-row{display:flex;align-items:flex-start;gap:8px}
+.role-tip-badge{display:inline-block;padding:2px 8px;border-radius:8px;font-family:'Oswald',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:.04em;flex-shrink:0;margin-top:1px}
+.role-tip-badge.coach{background:var(--blue);color:white}
+.role-tip-badge.guest{background:var(--grey-lt);color:white}
+
+/* ── GENERAL TOOLTIPS ────────────────────────── */
+/* Small ⓘ icon that sits inline next to any label */
+.tip-i{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:var(--blue);color:#fff;font-size:.56rem;cursor:pointer;font-style:normal;flex-shrink:0;user-select:none;vertical-align:middle;margin-left:5px;transition:background var(--tr)}
+.tip-i:hover{background:var(--blue-dk)}
+.tip-i.light{background:rgba(255,255,255,.28)}
+/* The expandable tip box that appears below the label when clicked */
+.tip-box{display:none;background:var(--lt-blue);border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:var(--r-sm);padding:9px 12px;margin:4px 0 8px;font-size:.77rem;color:var(--text);line-height:1.55}
+.tip-box.dark{background:rgba(0,0,0,.28);border-color:rgba(255,255,255,.15);color:rgba(255,255,255,.85)}
+.tip-box.show{display:block}
+
+/* ── SUCCESS OVERLAY ─────────────────────────── */
+#success-overlay{display:none;position:fixed;inset:0;background:rgba(8,16,40,.85);z-index:300;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px)}
+.success-box{background:var(--white);border-radius:var(--r);padding:28px 22px;width:100%;max-width:380px;text-align:center;box-shadow:var(--sh-lg);animation:scIn .22s ease}
+.success-emoji{font-size:3rem;margin-bottom:12px}
+.success-title{font-family:'Oswald',sans-serif;font-size:1.3rem;font-weight:700;color:var(--blue-dk);margin-bottom:6px}
+.success-msg{font-size:.87rem;color:var(--grey);line-height:1.6;margin-bottom:6px}
+.success-hint{font-size:.74rem;color:var(--grey-lt);margin-bottom:22px}
+.pending-screen{text-align:center;padding:32px 20px}
+.pending-icon{font-size:3rem;margin-bottom:16px}
+.pending-title{font-family:'Oswald',sans-serif;font-size:1.2rem;color:var(--white);margin-bottom:8px}
+.pending-msg{font-size:.88rem;color:rgba(255,255,255,.65);line-height:1.6;max-width:280px;margin:0 auto 20px}
+
+/* ── HEADER ─────────────────────────────────── */
+header{background:var(--blue-dp);flex-shrink:0;position:relative;overflow:hidden;min-height:64px}
+header::before{content:'';position:absolute;inset:0;background:
+  radial-gradient(ellipse 120% 80% at 50% 130%,rgba(26,60,143,.9) 0%,transparent 70%),
+  linear-gradient(170deg,var(--red-dk) 0%,var(--red) 18%,rgba(204,26,46,.3) 32%,transparent 48%),
+  linear-gradient(to bottom,var(--blue-dp) 0%,#0d2255 100%)}
+.hdr-pitch{position:absolute;inset:0;opacity:.12;pointer-events:none}
+.hdr-pitch svg{width:100%;height:100%}
+.hdr-v-out{position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:55vw solid transparent;border-right:55vw solid transparent;border-top:36px solid rgba(255,255,255,.1)}
+.hdr-v-red{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:0;height:0;border-left:48vw solid transparent;border-right:48vw solid transparent;border-top:30px solid rgba(204,26,46,.5)}
+.hdr-glow{position:absolute;top:-20px;left:-10px;width:200px;height:120px;background:radial-gradient(ellipse,rgba(204,26,46,.3) 0%,transparent 70%);pointer-events:none}
+.h-inner{position:relative;z-index:4;padding:11px 14px 13px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.h-brand{flex:1;min-width:0;cursor:pointer;display:flex;flex-direction:column;justify-content:center;gap:1px}
+.h-club{font-family:'Oswald',sans-serif;font-size:.46rem;font-weight:400;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.32);margin-top:0px;padding-left:1px}
+.h-title{font-family:'Oswald',sans-serif;font-size:1.3rem;font-weight:700;color:var(--white);letter-spacing:.05em;line-height:1;text-shadow:0 2px 10px rgba(0,0,0,.4)}
+.h-title .r{color:var(--red);text-shadow:0 0 20px rgba(204,26,46,.5)}
+.h-right{display:flex;gap:8px;align-items:center;flex-shrink:0}
+.sync-dot{display:none;width:8px;height:8px;border-radius:50%;background:#4ade80;box-shadow:0 0 0 2px rgba(74,222,128,.3);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.h-btn{background:var(--red);color:var(--white);border:none;border-radius:var(--r-sm);padding:7px 13px;font-family:'Oswald',sans-serif;font-size:.8rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;box-shadow:0 2px 10px rgba(204,26,46,.4);transition:background var(--tr),transform var(--tr)}
+.h-btn:active{background:var(--red-dk);transform:scale(.95)}
+.h-btn-ghost{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2)}
+
+/* ── BOTTOM NAV TAB BAR ──────────────────────── */
+/* Moved to bottom — iOS/Android convention, thumb-friendly */
+nav{
+  display:flex;
+  background:var(--blue-dp);
+  border-top:1px solid rgba(255,255,255,.1);
+  border-bottom:none;
+  flex-shrink:0;
+  overflow-x:auto;
+  scrollbar-width:none;
+  /* Safe area inset for iPhone home indicator */
+  padding-bottom:env(safe-area-inset-bottom, 0px);
+  box-shadow:0 -4px 20px rgba(0,0,0,.25);
+  position:sticky;
+  bottom:0;
+  z-index:50;
+  order:99; /* pushes nav to bottom of flex column */
+}
+nav::-webkit-scrollbar{display:none}
+nav button{
+  flex:1 0 auto;
+  border:none;
+  background:transparent;
+  color:rgba(255,255,255,.4);
+  padding:8px 6px 6px;
+  font-family:'Oswald',sans-serif;
+  font-size:.52rem;
+  font-weight:400;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  cursor:pointer;
+  transition:all var(--tr);
+  white-space:nowrap;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:3px;
+  line-height:1.2;
+  min-width:44px; /* minimum tap target width */
+  position:relative;
+}
+/* Active indicator — red dot above icon instead of underline */
+nav button.active::before{
+  content:'';
+  position:absolute;
+  top:5px;
+  left:50%;
+  transform:translateX(-50%);
+  width:3px;
+  height:3px;
+  border-radius:50%;
+  background:var(--red);
+}
+nav button svg{transition:all var(--tr);stroke:rgba(255,255,255,.38)}
+nav button.active{color:var(--white);font-weight:600}
+nav button.active svg{stroke:var(--white)}
+
+/* ── SCREENS — extra bottom padding for tab bar ── */
+.screen{display:none;flex:1;overflow-y:auto;padding:14px 14px 90px;position:relative}
+.screen.active{display:block}
+#screen-home{background:var(--off) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Cellipse cx='150' cy='150' rx='90' ry='55' fill='none' stroke='%231a3c8f' stroke-width='8' opacity='.04'/%3E%3Cline x1='150' y1='95' x2='150' y2='205' stroke='%231a3c8f' stroke-width='4' opacity='.04'/%3E%3Cpath d='M100 150 Q150 120 200 150' fill='none' stroke='%231a3c8f' stroke-width='3' opacity='.04'/%3E%3Cpath d='M100 150 Q150 180 200 150' fill='none' stroke='%231a3c8f' stroke-width='3' opacity='.04'/%3E%3C/svg%3E") no-repeat right -30px top 20px/220px 220px}
+#screen-history{background:var(--off) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Cellipse cx='150' cy='150' rx='90' ry='55' fill='none' stroke='%231a3c8f' stroke-width='8' opacity='.04'/%3E%3C/svg%3E") no-repeat right -20px bottom 20px/180px 180px}
+#screen-awards,#screen-export,#screen-roster,#screen-fixtures,#screen-hub,#screen-admin,#screen-match{background:var(--off)}
+
+/* ── SECTION HEADER ─────────────────────────── */
+.v-hdr{background:linear-gradient(130deg,var(--blue-dk) 0%,var(--blue) 55%,var(--red) 100%);border-radius:var(--r) var(--r) 0 0;padding:10px 14px;font-family:'Oswald',sans-serif;font-size:.7rem;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--white);position:relative;overflow:hidden;margin:-14px -14px 14px}
+.v-hdr::after{content:'';position:absolute;top:0;right:0;width:0;height:0;border-top:44px solid rgba(255,255,255,.08);border-left:34px solid transparent}
+
+/* ── CARDS ───────────────────────────────────── */
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:12px;box-shadow:var(--sh-sm);position:relative;overflow:hidden}
+.card-ttl{font-family:'Oswald',sans-serif;font-size:.62rem;text-transform:uppercase;letter-spacing:.13em;color:var(--grey-lt);margin-bottom:10px}
+
+/* ── SHIRT BADGE ─────────────────────────────── */
+.shirt{width:38px;height:38px;border-radius:9px;background:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;overflow:hidden;box-shadow:0 2px 6px rgba(10,26,69,.25)}
+.shirt::before{content:'';position:absolute;bottom:-2px;left:-2px;right:-2px;height:58%;background:var(--white);clip-path:polygon(0% 0%,50% 100%,100% 0%)}
+.shirt::after{content:'';position:absolute;bottom:0;left:2px;right:2px;height:54%;background:var(--red);clip-path:polygon(0% 0%,50% 100%,100% 0%)}
+.shirt-n{position:relative;z-index:3;font-family:'Oswald',sans-serif;font-size:.9rem;font-weight:700;color:var(--white);text-shadow:0 1px 4px rgba(0,0,0,.7);line-height:1}
+.shirt.sm{width:30px;height:30px;border-radius:7px}
+.shirt.sm .shirt-n{font-size:.72rem}
+
+/* ── FORM ────────────────────────────────────── */
+.field{margin-bottom:12px}
+.field label{display:block;font-size:.7rem;font-weight:600;color:var(--grey);margin-bottom:5px;text-transform:uppercase;letter-spacing:.07em;font-family:'Oswald',sans-serif}
+.field input,.field textarea,.field select{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:.93rem;font-family:'DM Sans',sans-serif;background:var(--off);color:var(--text);transition:border-color var(--tr);-webkit-appearance:none}
+.field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,60,143,.12)}
+.field textarea{resize:vertical;min-height:78px}
+.field.err input,.field.err textarea,.field.err select{border-color:var(--red);box-shadow:0 0 0 3px rgba(204,26,46,.12)}
+.ferr{font-size:.7rem;color:var(--red);margin-top:4px;display:none;font-weight:500}
+.field.err .ferr{display:block}
+/* Name warning banner */
+.name-warn{display:none;background:var(--amber-lt);border:1px solid #fbbf24;border-radius:6px;padding:8px 11px;font-size:.75rem;color:var(--amber);margin-top:6px;line-height:1.4}
+.name-warn.show{display:block}
+
+/* ── TOGGLE ──────────────────────────────────── */
+.tog{width:46px;height:26px;border-radius:13px;border:none;cursor:pointer;background:#d1d5db;transition:background var(--tr);flex-shrink:0;position:relative}
+.tog.on{background:var(--blue)}
+.tog::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left var(--tr);box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.tog.on::after{left:23px}
+
+/* ── PLAYER ROW ──────────────────────────────── */
+.p-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);min-height:52px}
+.p-row:last-child{border-bottom:none}
+.p-name{flex:1;font-size:.92rem;font-weight:500}
+
+/* ── BUTTONS ─────────────────────────────────── */
+.btn{display:block;width:100%;padding:13px;border:none;border-radius:var(--r);font-family:'Oswald',sans-serif;font-size:.95rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:opacity var(--tr),transform var(--tr);box-shadow:var(--sh-sm)}
+.btn:active{transform:scale(.97);opacity:.88}
+.btn-blue{background:var(--blue);color:var(--white)}
+.btn-red{background:var(--red);color:var(--white)}
+.btn-wht{background:var(--white);color:var(--blue);border:2px solid var(--border)}
+.btn-green{background:#166534;color:var(--white)}
+.btn-green{background:#166534;color:var(--white)}
+.btn-sm{display:inline-block;width:auto;padding:7px 15px;font-size:.74rem;border-radius:var(--r-sm)}
+.btn+.btn{margin-top:10px}
+
+/* ── SCORE WIDGET ────────────────────────────── */
+.score-widget{background:linear-gradient(135deg,var(--blue-dk) 0%,var(--blue) 50%,var(--blue-dk) 100%);border-radius:var(--r);margin-bottom:12px;overflow:hidden;box-shadow:var(--sh-md);position:relative;display:none}
+.score-widget.show{display:block}
+.score-widget::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(to right,var(--red),rgba(255,255,255,.3),var(--red))}
+.score-inner{display:flex;align-items:stretch}
+.score-team{flex:1;display:flex;flex-direction:column;align-items:center;padding:12px 8px 10px;gap:3px}
+.score-tname{font-family:'Oswald',sans-serif;font-size:.62rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.6);text-align:center;line-height:1.2}
+.score-val{font-family:'Oswald',sans-serif;font-size:2.6rem;font-weight:700;color:var(--white);line-height:1}
+.score-ctrls{display:flex;gap:6px;align-items:center;margin-top:2px}
+.sc-btn{width:30px;height:30px;border-radius:50%;border:none;cursor:pointer;font-family:'Oswald',sans-serif;font-size:1.1rem;font-weight:700;display:flex;align-items:center;justify-content:center;transition:transform var(--tr);-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.sc-btn:active{transform:scale(.85)}
+.sc-btn.minus{background:rgba(255,255,255,.15);color:var(--white)}
+.sc-btn.plus{background:var(--red);color:var(--white);box-shadow:0 2px 8px rgba(204,26,46,.4)}
+.score-div{display:flex;align-items:center;padding:0 4px;font-family:'Oswald',sans-serif;font-size:1.2rem;font-weight:700;color:rgba(255,255,255,.25)}
+/* Sets tracker */
+.sets-bar{background:rgba(0,0,0,.25);padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sets-label{font-family:'Oswald',sans-serif;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.55);flex-shrink:0}
+.sets-btns{display:flex;gap:6px}
+.set-btn{padding:6px 14px;border:none;border-radius:6px;font-family:'Oswald',sans-serif;font-size:.72rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;transition:background var(--tr),transform var(--tr);-webkit-tap-highlight-color:transparent}
+.set-btn:active{transform:scale(.93)}
+.set-btn.complete{background:#22c55e;color:#fff}
+.set-btn.incomplete{background:#ef4444;color:#fff}
+.sets-pct{font-family:'Oswald',sans-serif;font-size:1rem;font-weight:700;color:var(--white);margin-left:auto}
+.sets-detail{font-size:.65rem;color:rgba(255,255,255,.5);margin-left:4px;font-family:'Oswald',sans-serif}
+
+/* ── MATCH BAR ───────────────────────────────── */
+.mbar{background:var(--blue-dk);border-radius:var(--r);padding:11px 15px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;position:relative;overflow:hidden;box-shadow:var(--sh-md)}
+.mbar::before{content:'';position:absolute;top:0;left:0;width:5px;height:100%;background:var(--red)}
+.ml{font-family:'Oswald',sans-serif;font-size:.54rem;letter-spacing:.14em;color:rgba(255,255,255,.44);text-transform:uppercase;margin-bottom:2px}
+.mv{font-family:'Oswald',sans-serif;font-size:1rem;font-weight:700;color:var(--white)}
+
+/* ── PLAYER STAT CARD ────────────────────────── */
+.pc{background:var(--white);border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px;overflow:hidden;box-shadow:var(--sh-sm)}
+.pc-head{display:flex;align-items:center;gap:10px;padding:9px 12px;background:linear-gradient(125deg,var(--blue-dk),var(--blue));position:relative;overflow:hidden}
+.pc-head::after{content:'';position:absolute;top:0;right:0;width:0;height:0;border-top:44px solid var(--red);border-left:34px solid transparent;opacity:.4}
+.pc-name{font-family:'Oswald',sans-serif;font-weight:600;font-size:.93rem;color:var(--white);flex:1}
+.sg{display:grid;grid-template-columns:repeat(5,1fr)}
+.sb{border:none;background:transparent;border-right:1px solid var(--border);padding:10px 3px 8px;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;transition:background var(--tr);-webkit-tap-highlight-color:transparent;touch-action:manipulation;min-height:62px}
+.sb:last-child{border-right:none}
+.sb:active{background:var(--lt-blue)}
+.si{font-size:.95rem}
+.sv{font-family:'Oswald',sans-serif;font-size:1.35rem;font-weight:700;color:#c8d3ec;line-height:1;transition:color var(--tr)}
+.sv.hot{color:var(--red)}
+.sl{font-size:.48rem;text-transform:uppercase;letter-spacing:.05em;color:var(--grey-lt);font-family:'Oswald',sans-serif}
+.undo-row{display:flex;justify-content:flex-end;padding:3px 10px;border-top:1px solid var(--border);background:var(--off)}
+.undo-btn{font-size:.66rem;color:var(--grey);background:none;border:none;cursor:pointer;padding:3px 6px}
+
+/* ── AWARDS ──────────────────────────────────── */
+.aw-block{border-radius:var(--r);overflow:hidden;margin-bottom:10px;box-shadow:var(--sh-sm);border:1px solid var(--border)}
+.aw-head{display:flex;align-items:center;gap:10px;padding:10px 14px;position:relative;overflow:hidden}
+.aw-icon{font-size:1.25rem;flex-shrink:0}
+.aw-title{font-family:'Oswald',sans-serif;font-weight:700;font-size:.83rem;color:var(--white)}
+.aw-sub{font-size:.6rem;color:rgba(255,255,255,.55);margin-top:1px}
+.aw-opp .aw-head{background:linear-gradient(125deg,#0c3270,#1a5bb5)}
+.aw-cch .aw-head{background:linear-gradient(125deg,var(--red-dk),var(--red))}
+.aw-par .aw-head{background:linear-gradient(125deg,#6b3800,#c07000)}
+.aw-mag .aw-head{background:linear-gradient(125deg,#1a3f2a,#2a7a50)}
+.aw-body{padding:12px 14px;background:var(--white)}
+.aw-sw{position:relative}
+.aw-sw::after{content:'▾';position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--grey);font-size:.8rem}
+.aw-sel{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:'DM Sans',sans-serif;font-size:.9rem;background:var(--off);color:var(--text);-webkit-appearance:none;cursor:pointer}
+.aw-sel:focus{outline:none;border-color:var(--blue)}
+.aw-2nd{margin-top:8px;display:none}
+.aw-2nd.show{display:block}
+.aw-magic{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:'DM Sans',sans-serif;font-size:.9rem;background:var(--off);resize:vertical;min-height:70px;color:var(--text)}
+.aw-err{font-size:.7rem;color:var(--red);margin-top:5px;display:none;font-weight:500}
+
+/* ── HISTORY ─────────────────────────────────── */
+.season-pill{display:inline-flex;align-items:center;gap:5px;background:var(--blue-dk);color:var(--white);font-family:'Oswald',sans-serif;font-size:.67rem;letter-spacing:.12em;text-transform:uppercase;padding:5px 12px;border-radius:20px;margin-bottom:10px;margin-top:4px}
+.hc{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:13px;margin-bottom:10px;cursor:pointer;box-shadow:var(--sh-sm);transition:box-shadow var(--tr),transform var(--tr);border-left:4px solid var(--blue);position:relative;overflow:hidden}
+.hc:active{transform:scale(.99);box-shadow:var(--sh-md)}
+.hc::after{content:'';position:absolute;top:0;right:0;width:0;height:0;border-top:36px solid var(--red);border-left:26px solid transparent;opacity:.12}
+.hd{font-size:.7rem;color:var(--grey-lt);font-family:'Oswald',sans-serif;letter-spacing:.06em}
+.ht{font-family:'Oswald',sans-serif;font-size:1rem;font-weight:700;color:var(--blue-dk);margin:3px 0 2px}
+.hscore{font-family:'Oswald',sans-serif;font-size:1.5rem;font-weight:700;color:var(--blue-dk);margin-bottom:4px}
+.hs{font-size:.74rem;color:var(--grey)}
+.ha{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}
+.hb{font-size:.66rem;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--off);cursor:pointer;font-family:'Oswald',sans-serif;letter-spacing:.04em;text-transform:uppercase;color:var(--text);transition:background var(--tr)}
+.hb:active{background:var(--lt-blue)}
+.hb.del{color:#b91c1c;border-color:#fca5a5}
+.hb.del:active{background:#fee2e2}
+
+/* ── DETAIL ──────────────────────────────────── */
+#ds{display:none;flex:1;overflow-y:auto;padding:14px 14px 24px}
+#ds.active{display:block;background:var(--off)}
+.st{width:100%;border-collapse:collapse;font-size:.8rem}
+.st th{background:var(--blue-dk);color:var(--white);padding:8px 5px;text-align:center;font-family:'Oswald',sans-serif;font-weight:600;font-size:.7rem;letter-spacing:.06em}
+.st th:first-child{text-align:left;padding-left:10px}
+.st td{padding:7px 5px;text-align:center;border-bottom:1px solid var(--border);font-family:'DM Sans',sans-serif}
+.st td:first-child{text-align:left;padding-left:10px}
+.st tr:nth-child(even) td{background:var(--off)}
+.st .zero{color:#c8d3ec}
+.st tfoot td{font-family:'Oswald',sans-serif;font-weight:700;background:var(--lt-blue);border-top:2px solid var(--blue);color:var(--blue-dk)}
+.nb{background:var(--off);border-radius:var(--r-sm);padding:11px 13px;margin-bottom:8px;border-left:3px solid var(--red)}
+.nl{font-family:'Oswald',sans-serif;font-size:.6rem;text-transform:uppercase;letter-spacing:.1em;color:var(--grey-lt);margin-bottom:4px}
+.nb p{font-size:.87rem;white-space:pre-wrap;color:var(--text)}
+
+/* ── COACHING ACTIONS ────────────────────────── */
+.ca-block{background:var(--white);border:2px solid var(--blue);border-radius:var(--r);padding:14px;margin-top:12px;box-shadow:var(--sh-md)}
+.ca-title{font-family:'Oswald',sans-serif;font-size:.78rem;font-weight:700;color:var(--blue-dk);letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.ca-locked{background:var(--lt-blue);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-top:12px}
+.ca-locked-msg{font-size:.82rem;color:var(--grey);font-style:italic}
+.ca-timer{font-size:.72rem;color:var(--blue);font-weight:600;margin-top:6px}
+
+/* ── AWARDS HISTORY ──────────────────────────── */
+.ahc{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:10px;box-shadow:var(--sh-sm);border-left:4px solid #c07000;cursor:pointer}
+.ap{display:inline-block;padding:3px 9px;border-radius:10px;font-family:'Oswald',sans-serif;font-size:.66rem;font-weight:600;letter-spacing:.04em;margin-right:4px;margin-bottom:4px}
+.apo{background:#dbeafe;color:#1e40af}
+.apc{background:#fee2e2;color:#991b1b}
+.app{background:#fef3c7;color:#92400e}
+.apm{background:#d1fae5;color:#065f46}
+
+/* ── FIXTURES ────────────────────────────────── */
+.fx-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:13px;margin-bottom:10px;box-shadow:var(--sh-sm);display:flex;align-items:center;gap:12px}
+.fx-date{font-family:'Oswald',sans-serif;font-size:.7rem;color:var(--grey);letter-spacing:.06em;margin-bottom:2px}
+.fx-teams{font-family:'Oswald',sans-serif;font-size:.9rem;font-weight:700;color:var(--blue-dk)}
+.fx-comp{font-size:.72rem;color:var(--grey-lt);margin-top:2px}
+.fx-track{background:var(--red);color:var(--white);border:none;border-radius:6px;padding:6px 12px;font-family:'Oswald',sans-serif;font-size:.7rem;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.fx-upcoming{border-left:3px solid var(--blue)}
+.fx-past{border-left:3px solid var(--border);opacity:.7}
+
+/* ── HUB ─────────────────────────────────────── */
+.hub-link{background:var(--white);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text);box-shadow:var(--sh-sm);transition:box-shadow var(--tr)}
+.hub-link:active{box-shadow:var(--sh-md)}
+.hub-icon{font-size:1.2rem;flex-shrink:0}
+.hub-label{font-family:'Oswald',sans-serif;font-size:.88rem;font-weight:600;flex:1}
+.hub-arrow{color:var(--grey-lt);font-size:.8rem}
+
+/* ── ADMIN ───────────────────────────────────── */
+.admin-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:13px;margin-bottom:10px;box-shadow:var(--sh-sm)}
+.admin-email{font-size:.9rem;font-weight:600;color:var(--text);margin-bottom:3px}
+.admin-meta{font-size:.74rem;color:var(--grey-lt)}
+.admin-btns{display:flex;gap:6px;margin-top:10px}
+.approve-btn{background:var(--green-lt);color:var(--green);border:1px solid #86efac;border-radius:6px;padding:5px 12px;font-family:'Oswald',sans-serif;font-size:.7rem;font-weight:600;cursor:pointer;transition:background var(--tr)}
+.reject-btn{background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;border-radius:6px;padding:5px 12px;font-family:'Oswald',sans-serif;font-size:.7rem;font-weight:600;cursor:pointer}
+.role-sel{padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-family:'Oswald',sans-serif;font-size:.7rem;background:var(--off);cursor:pointer}
+
+/* ── EXPORT ──────────────────────────────────── */
+.eb{background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:12px;box-shadow:var(--sh-sm)}
+.eb-head{padding:10px 14px;display:flex;align-items:center;gap:10px}
+.eb-icon{font-size:1.2rem;flex-shrink:0}
+.eb-title{font-family:'Oswald',sans-serif;font-size:.88rem;font-weight:600;color:var(--white)}
+.eb-body{padding:12px 14px}
+.eb-desc{font-size:.77rem;color:var(--grey);margin-bottom:10px;line-height:1.5}
+.csv-head{background:linear-gradient(125deg,#065f46,#059669)}
+.email-head{background:linear-gradient(125deg,var(--red-dk),var(--red))}
+.bk-head{background:linear-gradient(125deg,var(--blue-dp),var(--blue-dk))}
+.sel-input{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:'DM Sans',sans-serif;font-size:.87rem;background:var(--off);-webkit-appearance:none;margin-bottom:10px}
+
+/* ── ROSTER ──────────────────────────────────── */
+.rr{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)}
+.rr:last-child{border-bottom:none}
+.ni-badge{width:40px;height:40px;border-radius:9px;background:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;overflow:hidden;box-shadow:0 2px 5px rgba(10,26,69,.2);cursor:pointer}
+.ni-badge::before{content:'';position:absolute;bottom:-2px;left:-2px;right:-2px;height:58%;background:var(--white);clip-path:polygon(0% 0%,50% 100%,100% 0%)}
+.ni-badge::after{content:'';position:absolute;bottom:0;left:2px;right:2px;height:54%;background:var(--red);clip-path:polygon(0% 0%,50% 100%,100% 0%)}
+.ni-badge span{position:relative;z-index:3;font-family:'Oswald',sans-serif;font-size:.85rem;font-weight:700;color:var(--white);text-shadow:0 1px 4px rgba(0,0,0,.7)}
+.nmi{flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:'DM Sans',sans-serif;font-size:.9rem;background:var(--off);color:var(--text)}
+.del-p{background:none;border:none;color:#ef4444;font-size:1.1rem;cursor:pointer;padding:6px;flex-shrink:0}
+
+/* ── MODAL / CONFIRM ─────────────────────────── */
+#mo,#co{display:none;position:fixed;inset:0;background:rgba(8,16,40,.6);z-index:100;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px)}
+#mo.show,#co.show{display:flex}
+#co{align-items:center;padding:20px}
+.modal{background:var(--white);border-radius:20px 20px 0 0;padding:20px 16px 36px;width:100%;max-width:500px;box-shadow:var(--sh-lg);animation:slideUp .22s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-title{font-family:'Oswald',sans-serif;font-size:1.1rem;font-weight:700;color:var(--blue-dk);margin-bottom:14px}
+.modal-close{float:right;background:none;border:none;font-size:1.3rem;color:var(--grey-lt);cursor:pointer;margin-top:-2px}
+.cbox{background:var(--white);border-radius:var(--r);padding:24px 20px;width:100%;max-width:360px;box-shadow:var(--sh-lg);text-align:center;animation:scIn .18s ease}
+@keyframes scIn{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
+.cicon{font-size:2rem;margin-bottom:10px}
+.ctitle{font-family:'Oswald',sans-serif;font-size:1.05rem;font-weight:700;color:var(--blue-dk);margin-bottom:6px}
+.cmsg{font-size:.86rem;color:var(--grey);margin-bottom:20px;line-height:1.5}
+.cbtns{display:flex;gap:10px}
+.cbtns button{flex:1}
+
+/* ── TOAST ───────────────────────────────────── */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(72px);background:var(--blue-dp);color:var(--white);padding:10px 20px;border-radius:24px;font-family:'Oswald',sans-serif;font-size:.8rem;letter-spacing:.05em;box-shadow:var(--sh-lg);z-index:999;transition:transform .28s ease;pointer-events:none;border-left:4px solid var(--red)}
+#toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ── EMPTY ───────────────────────────────────── */
+.empty{text-align:center;padding:48px 20px;color:var(--grey-lt)}
+.empty-icon{font-size:2.6rem;margin-bottom:12px}
+.empty p{font-size:.88rem;line-height:1.6}
+
+/* ── TOOLTIPS ─────────────────────────────────── */
+.tip-icon{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:var(--blue);color:white;font-size:.58rem;cursor:pointer;font-style:normal;flex-shrink:0;user-select:none;vertical-align:middle;margin-left:4px}
+.tip-icon.tip-light{background:rgba(255,255,255,.3);color:white}
+.tip-box{display:none;background:var(--lt-blue);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 12px;margin-top:4px;margin-bottom:8px;font-size:.78rem;color:var(--text);line-height:1.55}
+.tip-box.tip-dark{background:rgba(0,0,0,.3);border-color:rgba(255,255,255,.15);color:rgba(255,255,255,.85)}
+.tip-box.show{display:block}
+.spinner{display:flex;align-items:center;justify-content:center;padding:40px;color:var(--grey-lt);font-family:'Oswald',sans-serif;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;gap:10px}
+.spin-ring{width:22px;height:22px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:ring .7s linear infinite;flex-shrink:0}
+@keyframes ring{to{transform:rotate(360deg)}}
+
+/* ── STATUS BADGE ────────────────────────────── */
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-family:'Oswald',sans-serif;font-size:.64rem;font-weight:600;letter-spacing:.04em}
+.badge-green{background:var(--green-lt);color:var(--green)}
+.badge-amber{background:var(--amber-lt);color:var(--amber)}
+.badge-red{background:#fee2e2;color:#b91c1c}
+.badge-blue{background:var(--lt-blue);color:var(--blue)}
+</style>
+</head>
+<body>
+
+<!-- ══ AUTH SCREENS ══════════════════════════════════════ -->
+<div id="auth-root" style="display:none">
+
+  <!-- Login -->
+  <div class="auth-wrap" id="login-screen">
+    <div class="auth-logo">GAINLINE <span>RL</span></div>
+    <div class="auth-sub">Rugby League Coaching Platform</div>
+    <div class="auth-card">
+      <div class="auth-title">Sign In</div>
+      <div class="auth-field">
+        <label>Email Address</label>
+        <input type="email" id="login-email" placeholder="coach@yourclub.com" autocomplete="email">
+      </div>
+      <div class="auth-field">
+        <label>Password</label>
+        <input type="password" id="login-pw" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="btn btn-blue" onclick="doLogin()">Sign In →</button>
+      <button class="btn btn-wht" onclick="showRegister()" style="margin-top:8px">New here? Request Access</button>
+      <div id="login-err" style="display:none;font-size:.76rem;color:#b91c1c;margin-top:10px;font-weight:500;padding:8px 10px;background:#fee2e2;border-radius:6px"></div>
+    </div>
+  </div>
+
+  <!-- Register -->
+  <div class="auth-wrap" id="register-screen" style="display:none">
+    <div class="auth-logo">GAINLINE <span>RL</span></div>
+    <div class="auth-sub">Create Your Account</div>
+    <div class="auth-card">
+      <div class="auth-title">Create Account</div>
+      <div class="auth-field">
+        <label>Your Name</label>
+        <input type="text" id="reg-name" placeholder="First name">
+      </div>
+      <div class="auth-field">
+        <label>Club Name</label>
+        <input type="text" id="reg-club" placeholder="e.g. Sherburn Bears ARLFC">
+      </div>
+      <div class="auth-field">
+        <label>Email Address</label>
+        <input type="email" id="reg-email" placeholder="coach@yourclub.com" autocomplete="email">
+      </div>
+      <div class="auth-field">
+        <label>Password</label>
+        <input type="password" id="reg-pw" placeholder="Minimum 8 characters" autocomplete="new-password">
+      </div>
+      <div class="auth-field">
+        <label style="display:flex;align-items:center;gap:6px">
+          I am a…
+          <span class="role-tip-icon" onclick="toggleRoleInfo()" title="What's the difference?">ⓘ</span>
+        </label>
+        <div class="role-tip-box" id="role-info">
+          <div class="role-tip-row">
+            <span class="role-tip-badge coach">Coach</span>
+            Full access — track matches, record stats, add fixtures, export data and add coaching actions.
+          </div>
+          <div class="role-tip-row" style="margin-top:6px">
+            <span class="role-tip-badge guest">Guest</span>
+            View only — see match history and awards but cannot track or edit anything. No access to club documents.
+          </div>
+        </div>
+        <div style="position:relative">
+          <select id="reg-role" style="width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:.95rem;font-family:'DM Sans',sans-serif;background:var(--off);color:var(--text);-webkit-appearance:none;cursor:pointer">
+            <option value="coach">🏉 Coach — Full access</option>
+            <option value="guest">👀 Guest — View only</option>
+          </select>
+          <span style="position:absolute;right:13px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--grey)">▾</span>
+        </div>
+      </div>
+      <div id="reg-err" style="display:none;font-size:.76rem;color:#b91c1c;margin-bottom:12px;font-weight:500;"></div>
+      <button class="btn btn-blue" onclick="doRegister()">Request Access →</button>
+      <div class="auth-switch">Already have an account? <a onclick="showLogin()">Sign In</a></div>
+    </div>
+  </div>
+
+  <!-- Pending approval -->
+  <div class="auth-wrap" id="pending-screen" style="display:none">
+    <div class="auth-logo">GAINLINE <span>RL</span></div>
+    <div class="auth-sub">Rugby League Coaching Platform</div>
+    <div class="auth-card" style="text-align:center">
+      <div style="font-size:2.8rem;margin-bottom:12px">⏳</div>
+      <div style="font-family:'Oswald',sans-serif;font-size:1.1rem;font-weight:700;color:var(--blue-dk);margin-bottom:8px">Waiting for Approval</div>
+      <div style="font-size:.85rem;color:var(--grey);line-height:1.6;margin-bottom:16px">
+        Your account has been created and is linked to your club. The club admin just needs to approve your access — this usually only takes a few minutes.
+      </div>
+      <div id="pending-details" style="background:var(--off);border-radius:var(--r-sm);padding:12px;margin-bottom:16px;text-align:left;font-size:.82rem;color:var(--grey);line-height:1.8;display:none">
+        <!-- Populated dynamically with name, club, role -->
+      </div>
+      <div style="font-size:.78rem;color:var(--grey-lt);margin-bottom:18px;line-height:1.5">
+        If you're still waiting after a while, contact your club admin and ask them to check the Admin tab in the app.
+      </div>
+      <button class="btn btn-wht" onclick="doLogout()" style="font-size:.82rem;padding:10px">Sign Out</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══ MAIN APP ════════════════════════════════════════════ -->
+<div id="app" style="display:none">
+
+  <header>
+    <div class="hdr-pitch">
+      <svg viewBox="0 0 500 70" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+        <rect x="30" y="6" width="440" height="58" rx="2" fill="none" stroke="white" stroke-width="1.2"/>
+        <line x1="72" y1="6" x2="72" y2="64" stroke="white" stroke-width="1"/>
+        <line x1="428" y1="6" x2="428" y2="64" stroke="white" stroke-width="1"/>
+        <line x1="148" y1="6" x2="148" y2="64" stroke="white" stroke-width=".8"/>
+        <line x1="352" y1="6" x2="352" y2="64" stroke="white" stroke-width=".8"/>
+        <line x1="210" y1="6" x2="210" y2="64" stroke="white" stroke-width=".6" stroke-dasharray="3,4"/>
+        <line x1="290" y1="6" x2="290" y2="64" stroke="white" stroke-width=".6" stroke-dasharray="3,4"/>
+        <line x1="250" y1="6" x2="250" y2="64" stroke="white" stroke-width="1"/>
+        <line x1="244" y1="6" x2="244" y2="20" stroke="white" stroke-width="1.2"/>
+        <line x1="256" y1="6" x2="256" y2="20" stroke="white" stroke-width="1.2"/>
+        <line x1="238" y1="20" x2="262" y2="20" stroke="white" stroke-width="1.2"/>
+        <line x1="56" y1="6" x2="56" y2="20" stroke="white" stroke-width="1.2"/>
+        <line x1="68" y1="6" x2="68" y2="20" stroke="white" stroke-width="1.2"/>
+        <line x1="50" y1="20" x2="74" y2="20" stroke="white" stroke-width="1.2"/>
+        <line x1="432" y1="6" x2="432" y2="20" stroke="white" stroke-width="1.2"/>
+        <line x1="444" y1="6" x2="444" y2="20" stroke="white" stroke-width="1.2"/>
+        <line x1="426" y1="20" x2="450" y2="20" stroke="white" stroke-width="1.2"/>
+      </svg>
+    </div>
+    <div class="hdr-v-out"></div>
+    <div class="hdr-v-red"></div>
+    <div class="hdr-glow"></div>
+    <div class="h-inner">
+      <!-- GAINLINE logo — confirmed design: stacked GAIN / dashed 10m line / LINE with scrum marker -->
+      <div class="h-brand" onclick="showTab('home')" style="cursor:pointer">
+        <svg height="38" viewBox="0 0 155 38" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Gainline">
+          <!-- GAIN — white, bold condensed, sits above the line -->
+          <text x="0" y="15"
+            font-family="'Barlow Condensed','Oswald',sans-serif"
+            font-weight="800" font-size="15" letter-spacing="2.5"
+            fill="white">GAIN</text>
+          <!-- The 10m dashed line — exact rugby league pitch marking.
+               Dashes run the full width of the wordmark then stop
+               just short of the vertical scrum marker. -->
+          <line x1="0"  y1="19.5" x2="9"  y2="19.5" stroke="rgba(255,255,255,.55)" stroke-width="1.3" stroke-linecap="round"/>
+          <line x1="12" y1="19.5" x2="21" y2="19.5" stroke="rgba(255,255,255,.55)" stroke-width="1.3" stroke-linecap="round"/>
+          <line x1="24" y1="19.5" x2="33" y2="19.5" stroke="rgba(255,255,255,.55)" stroke-width="1.3" stroke-linecap="round"/>
+          <line x1="36" y1="19.5" x2="45" y2="19.5" stroke="rgba(255,255,255,.55)" stroke-width="1.3" stroke-linecap="round"/>
+          <line x1="48" y1="19.5" x2="57" y2="19.5" stroke="rgba(255,255,255,.55)" stroke-width="1.3" stroke-linecap="round"/>
+          <line x1="60" y1="19.5" x2="69" y2="19.5" stroke="rgba(255,255,255,.55)" stroke-width="1.3" stroke-linecap="round"/>
+          <line x1="72" y1="19.5" x2="78" y2="19.5" stroke="rgba(255,255,255,.55)" stroke-width="1.3" stroke-linecap="round"/>
+          <!-- Vertical scrum marker — the perpendicular line that sits at the
+               end of the 10m line on a real pitch. Taller than the dashes so
+               it reads as a distinct structural element. -->
+          <line x1="82" y1="12" x2="82" y2="27" stroke="rgba(255,255,255,.55)" stroke-width="1.3" stroke-linecap="round"/>
+          <!-- LINE — red, slightly larger than GAIN, sits below the line -->
+          <text x="0" y="35"
+            font-family="'Barlow Condensed','Oswald',sans-serif"
+            font-weight="800" font-size="16" letter-spacing="4"
+            fill="#cc1a2e">LINE</text>
+        </svg>
+        <!-- Club name sits below the logo, updated on login -->
+        <div class="h-club" id="h-club-name"></div>
+      </div>
+      <div class="h-right">
+        <div class="sync-dot" id="sdot" title="Synced"></div>
+        <button class="h-btn h-btn-ghost" onclick="doLogout()" style="font-size:.7rem;padding:6px 10px">Sign Out</button>
+      </div>
+    </div>
+  </header>
+
+  <nav id="main-nav">
+    <button class="active" id="tab-home" onclick="showTab('home')">
+      <!-- Rugby ball SVG -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <ellipse cx="12" cy="12" rx="9" ry="5.5" transform="rotate(-45 12 12)"/>
+        <line x1="4.5" y1="4.5" x2="19.5" y2="19.5"/>
+        <line x1="9" y1="12" x2="12" y2="9"/>
+        <line x1="12" y1="15" x2="15" y2="12"/>
+      </svg>
+      Home
+    </button>
+    <button id="tab-match"    onclick="showTab('match')">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Live
+    </button>
+    <button id="tab-fixtures" onclick="showTab('fixtures')">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Fixtures
+    </button>
+    <button id="tab-history"  onclick="showTab('history')">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      History
+    </button>
+    <button id="tab-awards"   onclick="showTab('awards')">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
+      Awards
+    </button>
+    <button id="tab-export"   onclick="showTab('export')">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export
+    </button>
+    <button id="tab-hub"      onclick="showTab('hub')">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/><circle cx="12" cy="7" r="1" fill="currentColor"/></svg>
+      Club
+    </button>
+    <button id="tab-roster"   onclick="showTab('roster')">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Squad
+    </button>
+    <button id="tab-admin" style="display:none;flex-direction:column;align-items:center" onclick="showTab('admin')">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Admin
+    </button>
+  </nav>
+
+  <!-- HOME -->
+  <div class="screen active" id="screen-home">
+    <datalist id="club-suggestions"></datalist>
+
+    <!-- UPCOMING FIXTURES — primary entry point -->
+    <div id="home-fixtures-section"></div>
+
+    <!-- MATCH SETUP — collapsed by default if fixtures exist -->
+    <div class="card" id="match-setup-card" style="margin-bottom:10px">
+      <div class="v-hdr" id="setup-toggle" style="cursor:pointer;user-select:none" onclick="toggleMatchSetup()">
+        <span id="setup-toggle-label">+ Set Up Match Manually</span>
+      </div>
+      <div id="match-setup-body" style="display:none">
+        <div style="height:4px"></div>
+        <div id="fixture-picker-wrap" style="margin-bottom:12px;display:none">
+          <div class="card-ttl">Or load from a saved fixture:</div>
+          <select id="fixture-picker" class="sel-input" style="margin-bottom:0" onchange="loadFixture()">
+            <option value="">— Select fixture —</option>
+          </select>
+        </div>
+        <div class="field" id="f-date">
+          <label>Date</label>
+          <input type="date" id="match-date">
+          <div class="ferr">Please select a date</div>
+        </div>
+        <div class="field" id="f-home">
+          <label>Home Team <span class="tip-icon" onclick="toggleTip('tip-home')">ⓘ</span></label>
+          <div class="tip-box" id="tip-home">Start typing your club name and it will appear as a suggestion.</div>
+          <input type="text" id="home-team" list="club-suggestions" autocomplete="off" oninput="checkName(this,'home-warn')">
+          <div class="name-warn" id="home-warn">⚠️ This looks like a full name — use a team name only for privacy.</div>
+          <div class="ferr">Please enter the home team</div>
+        </div>
+        <div class="field" id="f-away">
+          <label>Away Team</label>
+          <input type="text" id="away-team" list="club-suggestions" autocomplete="off" oninput="checkName(this,'away-warn')">
+          <div class="name-warn" id="away-warn">⚠️ This looks like a full name — use a team name only for privacy.</div>
+          <div class="ferr">Please enter the away team</div>
+        </div>
+        <div class="field" id="f-comp">
+          <label>Competition <span class="tip-icon" onclick="toggleTip('tip-comp')">ⓘ</span></label>
+          <div class="tip-box" id="tip-comp">e.g. "League", "Cup", "Friendly". Appears on reports and history.</div>
+          <input type="text" id="match-comp" placeholder="e.g. League / Cup / Friendly" list="comp-suggestions">
+          <datalist id="comp-suggestions">
+            <option value="League"><option value="Cup"><option value="Friendly">
+            <option value="Festival"><option value="Tournament"><option value="Pre-Season">
+          </datalist>
+        </div>
+      </div>
+    </div>
+
+    <!-- SQUAD SELECTION -->
+    <div class="card">
+      <div class="card-ttl">Who is playing today? <span class="tip-icon" onclick="toggleTip('tip-squad')">ⓘ</span></div>
+      <div class="tip-box" id="tip-squad" style="margin-bottom:10px">Toggle players on (blue) for today. Players toggled off won't appear on the tracking screen.</div>
+      <div id="squad-list"><div class="spinner"><div class="spin-ring"></div>Loading squad…</div></div>
+      <div id="squad-err" style="display:none;font-size:.75rem;color:var(--red);margin-top:8px;font-weight:500;">⚠ Select at least one player</div>
+    </div>
+    <button class="btn btn-red" onclick="startMatch()" style="padding:15px;font-size:1rem;letter-spacing:.08em">
+      ▶ &nbsp;Start Tracking
+    </button>
+    <div style="height:8px"></div>
+  </div>
+
+  <!-- LIVE MATCH -->
+  <div class="screen" id="screen-match">
+    <div class="score-widget" id="score-widget">
+      <div class="score-inner">
+        <div class="score-team">
+          <div class="score-tname" id="s-home-name">Home</div>
+          <div class="score-val" id="s-home-val">0</div>
+          <div class="score-ctrls">
+            <button class="sc-btn minus" onclick="adjScore('home',-1)">−</button>
+            <button class="sc-btn plus"  onclick="adjScore('home', 1)">+</button>
+          </div>
+        </div>
+        <div class="score-div">VS</div>
+        <div class="score-team">
+          <div class="score-tname" id="s-away-name">Away</div>
+          <div class="score-val" id="s-away-val">0</div>
+          <div class="score-ctrls">
+            <button class="sc-btn minus" onclick="adjScore('away',-1)">−</button>
+            <button class="sc-btn plus"  onclick="adjScore('away', 1)">+</button>
+          </div>
+        </div>
+      </div>
+      <div class="sets-bar">
+        <span class="sets-label">Sets <span class="tip-icon tip-light" onclick="toggleTip('tip-sets')">ⓘ</span></span>
+        <div class="tip-box tip-dark" id="tip-sets" style="width:100%;margin-bottom:6px">A <strong>Complete Set</strong> is all 6 tackles retained without losing possession. An <strong>Incomplete Set</strong> is when possession is lost before the 6th tackle (knock on, forward pass, held up etc.)</div>
+        <div class="sets-btns">
+          <button class="set-btn complete" onclick="addSet('complete')">✓ Complete</button>
+          <button class="set-btn incomplete" onclick="addSet('incomplete')">✗ Incomplete</button>
+        </div>
+        <div style="margin-left:auto;text-align:right">
+          <div class="sets-pct" id="sets-pct">—%</div>
+          <div class="sets-detail" id="sets-detail">No sets recorded</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mbar">
+      <div style="padding-left:6px"><div class="ml">Match</div><div class="mv" id="live-title">—</div></div>
+      <div style="text-align:right"><div class="ml">Date</div><div class="mv" id="live-date">—</div></div>
+    </div>
+
+    <div id="player-cards"></div>
+
+    <div class="card">
+      <div class="v-hdr">Match Notes</div>
+      <div class="field" id="f-def">
+        <label>⚔️ Defence</label>
+        <textarea id="note-def" placeholder="How did we defend today?"></textarea>
+        <div class="ferr">Please add a defence note</div>
+      </div>
+      <div class="field" id="f-att">
+        <label>⚡ Attack</label>
+        <textarea id="note-att" placeholder="How did we attack today?"></textarea>
+        <div class="ferr">Please add an attack note</div>
+      </div>
+      <div class="field" id="f-gen">
+        <label>📝 General</label>
+        <textarea id="note-gen" placeholder="General observations…"></textarea>
+        <div class="ferr">Please add a general note</div>
+      </div>
+    </div>
+
+    <div style="font-family:'Oswald',sans-serif;font-size:.67rem;letter-spacing:.14em;text-transform:uppercase;color:var(--grey-lt);margin-bottom:10px;padding-left:2px">Match Awards</div>
+
+    <div class="aw-block aw-opp">
+      <div class="aw-head">
+        <span class="aw-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+        </span>
+        <div><div class="aw-title">Opposition POTM</div><div class="aw-sub">Awarded by opposing team</div></div>
+      </div>
+      <div class="aw-body">
+        <div class="aw-sw"><select class="aw-sel" id="aw-opp-1" onchange="awChange('opp')"><option value="">— Select player —</option></select></div>
+        <div class="aw-2nd" id="aw-opp-2w"><div class="aw-sw" style="margin-top:8px"><select class="aw-sel" id="aw-opp-2"><option value="">— Optional second player —</option></select></div></div>
+        <div class="aw-err" id="aw-opp-err">Please select a player</div>
+      </div>
+    </div>
+
+    <div class="aw-block aw-cch">
+      <div class="aw-head">
+        <span class="aw-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        </span>
+        <div><div class="aw-title">Coaches POTM</div><div class="aw-sub">Coaching team selection</div></div>
+      </div>
+      <div class="aw-body">
+        <div class="aw-sw"><select class="aw-sel" id="aw-cch-1" onchange="awChange('cch')"><option value="">— Select player —</option></select></div>
+        <div class="aw-2nd" id="aw-cch-2w"><div class="aw-sw" style="margin-top:8px"><select class="aw-sel" id="aw-cch-2"><option value="">— Optional second player —</option></select></div></div>
+        <div class="aw-err" id="aw-cch-err">Please select a player</div>
+      </div>
+    </div>
+
+    <div class="aw-block aw-par">
+      <div class="aw-head">
+        <span class="aw-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </span>
+        <div><div class="aw-title">Parents POTM</div><div class="aw-sub">Voted by the touchline</div></div>
+      </div>
+      <div class="aw-body">
+        <div class="aw-sw"><select class="aw-sel" id="aw-par-1" onchange="awChange('par')"><option value="">— Select player —</option></select></div>
+        <div class="aw-2nd" id="aw-par-2w"><div class="aw-sw" style="margin-top:8px"><select class="aw-sel" id="aw-par-2"><option value="">— Optional second player —</option></select></div></div>
+        <div class="aw-err" id="aw-par-err">Please select a player</div>
+      </div>
+    </div>
+
+    <div class="aw-block aw-mag">
+      <div class="aw-head">
+        <span class="aw-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </span>
+        <div><div class="aw-title">Custom Award</div><div class="aw-sub">Optional — add your own standout moment or note</div></div>
+      </div>
+      <div class="aw-body">
+        <div style="font-size:.72rem;color:var(--grey-lt);margin-bottom:6px">e.g. "Best tackle of the game — Noah, 40m break" or "Most improved player this season"</div>
+        <textarea class="aw-magic" id="aw-magic" placeholder="Describe a custom award or magic moment…"></textarea>
+      </div>
+    </div>
+
+    <button class="btn btn-red" onclick="reqSave()" style="margin-top:4px;margin-bottom:10px">💾 Save Match</button>
+    <button class="btn btn-wht" onclick="discardMatch()" style="margin-bottom:24px">✕ Discard &amp; Start Over</button>
+  </div>
+
+  <!-- FIXTURES -->
+  <div class="screen" id="screen-fixtures">
+    <div class="card">
+      <div class="v-hdr">Add Upcoming Fixture</div>
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="fx-date">
+      </div>
+      <div class="field">
+        <label>Home Team <span class="tip-icon" onclick="toggleTip('tip-fx-home')">ⓘ</span></label>
+        <div class="tip-box" id="tip-fx-home">Your club name will appear as a suggestion as you type. Type freely for opposition team names.</div>
+        <input type="text" id="fx-home" list="club-suggestions" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>Away Team</label>
+        <input type="text" id="fx-away" list="club-suggestions" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>Competition</label>
+        <div style="position:relative">
+          <select id="fx-comp" style="width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:'DM Sans',sans-serif;font-size:.93rem;background:var(--off);color:var(--text);-webkit-appearance:none;cursor:pointer">
+            <option value="">— Select (optional) —</option>
+            <option value="League">League</option>
+            <option value="Cup">Cup</option>
+            <option value="Friendly">Friendly</option>
+            <option value="Tournament">Tournament</option>
+          </select>
+          <span style="position:absolute;right:13px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--grey)">▾</span>
+        </div>
+      </div>
+      <button class="btn btn-blue btn-sm" onclick="addFixture()">+ Add Fixture</button>
+    </div>
+    <div id="fixtures-list"><div class="spinner"><div class="spin-ring"></div>Loading fixtures…</div></div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="screen" id="screen-history">
+    <div id="season-stats-banner"></div>
+    <div id="history-list"><div class="spinner"><div class="spin-ring"></div>Loading matches…</div></div>
+  </div>
+
+  <!-- AWARDS HISTORY -->
+  <div class="screen" id="screen-awards"><div id="awards-list"><div class="spinner"><div class="spin-ring"></div>Loading awards…</div></div></div>
+
+  <!-- EXPORT -->
+  <div class="screen" id="screen-export">
+    <div class="eb">
+      <div class="eb-head csv-head"><span class="eb-icon">📊</span><div class="eb-title">Download CSV (Stats Only)</div></div>
+      <div class="eb-body">
+        <div class="eb-desc">Player statistics in spreadsheet format — opens in Excel or Google Sheets for analysis.</div>
+        <select id="csv-sel" class="sel-input"></select>
+        <button class="btn btn-blue btn-sm" onclick="downloadCSVSel()">📊 Download CSV</button>
+      </div>
+    </div>
+
+    <div class="eb">
+      <div class="eb-head" style="background:linear-gradient(125deg,#1a3f2a,#2a7a50)"><span class="eb-icon">📄</span><div class="eb-title">Download Full Report</div></div>
+      <div class="eb-body">
+        <div class="eb-desc">Complete match report including stats, defence/attack/general notes, all awards and coaching actions — as a text file.</div>
+        <select id="report-sel" class="sel-input"></select>
+        <button class="btn btn-green btn-sm" onclick="downloadFullReport()">📄 Download Full Report</button>
+      </div>
+    </div>
+    <div class="eb">
+      <div class="eb-head email-head"><span class="eb-icon">✉️</span><div class="eb-title">Email Match Report</div></div>
+      <div class="eb-body">
+        <div class="eb-desc">Downloads match CSV then opens your email app.</div>
+        <select id="email-sel" class="sel-input"></select>
+        <button class="btn btn-red btn-sm" onclick="emailReport()">✉️ Download &amp; Email</button>
+      </div>
+    </div>
+    <div class="eb">
+      <div class="eb-head bk-head"><span class="eb-icon">🔄</span><div class="eb-title">Backup &amp; Restore</div></div>
+      <div class="eb-body">
+        <div class="eb-desc">Download a full JSON backup or restore from one.</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-blue btn-sm" onclick="backupData()">Download Backup</button>
+          <input type="file" id="restore-file" accept=".json" style="display:none" onchange="restoreBackup(this)">
+          <button class="btn btn-wht btn-sm" onclick="document.getElementById('restore-file').click()">Restore</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLUB HUB -->
+  <div class="screen" id="screen-hub">
+    <div class="card">
+      <div class="v-hdr">Add Link</div>
+      <div class="field">
+        <label>Label <span class="tip-icon" onclick="toggleTip('tip-hub')">ⓘ</span></label>
+        <div class="tip-box" id="tip-hub">Add links to your league table, fixtures page, club website, RFL resources etc. These open in your browser.</div>
+        <input type="text" id="hub-label" placeholder="e.g. League Table">
+      </div>
+      <div class="field">
+        <label>URL</label>
+        <input type="url" id="hub-url" placeholder="https://…">
+      </div>
+      <button class="btn btn-blue btn-sm" onclick="addHubLink()">+ Add Link</button>
+    </div>
+    <div id="hub-links-list"></div>
+
+    <div class="card" style="margin-top:4px">
+      <div class="v-hdr">Club Documents</div>
+      <p style="font-size:.8rem;color:var(--grey);margin-bottom:12px;line-height:1.5">Upload club policies, training plans, meeting notes, team sheets etc. PDFs and documents only. Visible to Coaches and Admins.</p>
+      <div class="field">
+        <label>Document Name</label>
+        <input type="text" id="doc-name" placeholder="e.g. Club Safeguarding Policy 2026">
+      </div>
+      <div class="field">
+        <label>Choose File (PDF, Word, Excel)</label>
+        <input type="file" id="doc-file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" style="padding:8px;font-size:.85rem;cursor:pointer">
+      </div>
+      <div id="doc-upload-progress" style="display:none;font-size:.78rem;color:var(--blue);margin-bottom:8px">⏳ Uploading…</div>
+      <button class="btn btn-blue btn-sm" onclick="uploadDoc()">⬆ Upload Document</button>
+    </div>
+    <div id="hub-docs-list"></div>
+
+    <!-- Club Members Directory -->
+    <div class="card" style="margin-top:4px">
+      <div class="v-hdr">Club Members</div>
+      <p style="font-size:.8rem;color:var(--grey);margin-bottom:12px;line-height:1.5">Everyone in your club. Coaches can update roles here.</p>
+      <div id="hub-members-list"><div class="spinner"><div class="spin-ring"></div>Loading…</div></div>
+    </div>
+  </div>
+
+  <!-- ROSTER -->
+  <div class="screen" id="screen-roster">
+    <div class="card">
+      <div class="v-hdr">Squad Roster</div>
+      <p style="font-size:.8rem;color:var(--grey);margin-bottom:12px;line-height:1.5">Edit here. Toggle players on/off each matchday on the Home screen.</p>
+      <div id="roster-list"></div>
+      <br>
+      <button class="btn btn-wht btn-sm" onclick="addPlayer()">+ Add Player</button>
+    </div>
+    <button class="btn btn-blue" onclick="saveRoster()">💾 Save Roster</button>
+    <div style="height:20px"></div>
+  </div>
+
+  <!-- ADMIN -->
+  <div class="screen" id="screen-admin">
+
+    <!-- Club Members -->
+    <div class="card">
+      <div class="v-hdr">👥 Club Members</div>
+      <div id="admin-members-list"><div class="spinner"><div class="spin-ring"></div>Loading…</div></div>
+    </div>
+
+    <!-- Invite -->
+    <div class="card">
+      <div class="v-hdr">✉️ Invite Someone</div>
+      <p style="font-size:.8rem;color:var(--grey);margin-bottom:12px;line-height:1.5">Generate a link and send it. They click it, fill in their name and password, and they're straight in — no approval step.</p>
+      <div class="field">
+        <label>Their Email</label>
+        <input type="email" id="invite-email" placeholder="coach@example.com">
+      </div>
+      <div class="field">
+        <label>Role</label>
+        <div style="position:relative">
+          <select id="invite-role" style="width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:'DM Sans',sans-serif;font-size:.93rem;background:var(--off);-webkit-appearance:none">
+            <option value="coach">🏉 Coach — Full access</option>
+            <option value="guest">👀 Guest — View only</option>
+          </select>
+          <span style="position:absolute;right:13px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--grey)">▾</span>
+        </div>
+      </div>
+      <button class="btn btn-blue btn-sm" onclick="generateInvite()">Generate Invite Link</button>
+      <div id="invite-result" style="display:none;background:var(--lt-blue);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;margin-top:12px">
+        <div style="font-size:.7rem;color:var(--grey-lt);font-family:'Oswald',sans-serif;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px">Send this link:</div>
+        <div id="invite-link" style="word-break:break-all;color:var(--blue);font-size:.78rem;font-weight:500;margin-bottom:10px"></div>
+        <button class="btn btn-blue btn-sm" onclick="copyInviteLink()">📋 Copy</button>
+        <button class="btn btn-wht btn-sm" onclick="shareInviteLink()" style="margin-left:6px">📤 Share</button>
+      </div>
+    </div>
+
+  </div>
+
+  </div>
+
+  <!-- DETAIL -->
+  <div id="ds">
+    <button class="btn btn-wht btn-sm" style="margin-bottom:14px" onclick="closeDetail()">← Back</button>
+    <div id="dc"></div>
+    <div style="height:24px"></div>
+  </div>
+
+</div><!-- /app -->
+
+<!-- SUCCESS OVERLAY — shown after match save -->
+<div id="success-overlay" style="display:none;position:fixed;inset:0;background:rgba(8,16,40,.85);z-index:300;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px)">
+  <div style="background:var(--white);border-radius:var(--r);padding:28px 22px;width:100%;max-width:380px;text-align:center;box-shadow:var(--sh-lg);animation:scIn .22s ease">
+    <div style="font-size:3rem;margin-bottom:12px">🏉</div>
+    <div style="font-family:'Oswald',sans-serif;font-size:1.3rem;font-weight:700;color:var(--blue-dk);margin-bottom:6px">Match Saved!</div>
+    <div style="font-size:.88rem;color:var(--grey);line-height:1.6;margin-bottom:20px">
+      Great work today. <strong>Now's the best time</strong> to add your Coaching Actions — while the game is still fresh in your mind.<br><br>
+      <span style="font-size:.76rem;color:var(--grey-lt)">You have 7 days to add and edit coaching actions for this match.</span>
+    </div>
+    <button class="btn btn-blue" onclick="goToCoachingActions()" style="margin-bottom:10px">🧠 Add Coaching Actions Now</button>
+    <button class="btn btn-wht" onclick="closeSuccessOverlay()">Skip — I'll do it later</button>
+  </div>
+</div>
+<div id="mo">
+  <div class="modal">
+    <button class="modal-close" onclick="closeMo()">✕</button>
+    <div class="modal-title">✉️ Email Match Report</div>
+    <div class="field"><label>Recipient</label><input type="email" id="email-to" placeholder="coach@club.com"></div>
+    <div class="field"><label>Subject</label><input type="text" id="email-subj" readonly style="background:#f0f0f0;color:#666"></div>
+    <p style="font-size:.77rem;color:var(--grey);margin-bottom:14px;line-height:1.5">CSV downloaded. Open your email app and attach it from Downloads.</p>
+    <button class="btn btn-red" onclick="openMailto()">📤 Open Email App</button>
+    <button class="btn btn-wht btn-sm" style="width:100%;margin-top:8px" onclick="copyRpt()">📋 Copy Report Text</button>
+  </div>
+</div>
+
+<!-- CONFIRM -->
+<div id="co">
+  <div class="cbox">
+    <div class="cicon">💾</div>
+    <div class="ctitle">Save this match?</div>
+    <div class="cmsg" id="cmsg">All stats, notes and awards will be saved.</div>
+    <div class="cbtns">
+      <button class="btn btn-wht" onclick="closeCo()">Cancel</button>
+      <button class="btn btn-red" onclick="doSave()">Yes, Save It</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+// ══════════════════════════════════════════════════════
+//  SUPABASE INIT
+// ══════════════════════════════════════════════════════
+const SUPA_URL  = 'https://sarkzbhsnthlvvjelayt.supabase.co';
+const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNhcmt6YmhzbnRobHZ2amVsYXl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3Mzk2NzksImV4cCI6MjA5MzMxNTY3OX0.qMMf1nOOh2N2jEezPxXoC9V31Fu_YUpAWH8xQalXYqk';
+const ADMIN_EMAIL = 'thebl.masri@gmail.com';
+
+const { createClient } = supabase;
+const sb = createClient(SUPA_URL, SUPA_KEY);
+
+// ══════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════
+let currentUser = null;
+let currentProfile = null;
+let roster = [];
+let matches = [];
+let fixtures = [];
+let active = null;
+let emailTxt = '';
+let lastSavedMatchId = null; // tracks which match to open for coaching actions
+const lastA = {};
+
+// ══════════════════════════════════════════════════════
+//  PROFANITY FILTER
+//  Uses leo-profanity (loaded via CDN) with a normalisation
+//  layer to catch leet-speak substitutions like b1tch, wh0re,
+//  f@ck etc. before checking the word list.
+// ══════════════════════════════════════════════════════
+
+// ══════════════════════════════════════════════════════
+//  PROFANITY FILTER — fully self-contained, no CDN needed
+//  Catches plain words AND leet-speak variants (b1tch, wh0re etc.)
+// ══════════════════════════════════════════════════════
+
+// Core blocked word list — stored as root forms, matched as
+// whole words (with word-boundary logic) to avoid false positives
+// on legitimate words that contain these as substrings.
+const BLOCKED_WORDS = new Set([
+  // Common profanities
+  'fuck','fucker','fucking','fucked','fucks','fuckhead','fuckwit',
+  'shit','shite','shitting','shits','bullshit',
+  'cunt','cunts','cunting',
+  'bitch','bitches','bitching',
+  'bastard','bastards',
+  'dick','dicks','dickhead','dickheads',
+  'cock','cocks','cockhead',
+  'prick','pricks',
+  'arse','arsehole','arseholes','ass','asshole','assholes',
+  'twat','twats',
+  'wanker','wankers','wank',
+  'whore','whores',
+  'slut','sluts',
+  'bollocks','bollock',
+  'piss','pisser',
+  'tit','tits','titties',
+  'knob','knobs','knobhead',
+  'minge',
+  'shag','shagging',
+  // Slurs — always blocked regardless of context
+  'nigger','nigga','niga','faggot','fag','chink','spic','kike',
+  'tranny','retard','spastic','mong',
+  // Child safeguarding specific
+  'pedo','paedo','nonce','groomer','kiddie',
+]);
+
+// Leet-speak normalisation: convert common character substitutions
+// back to their letter equivalents before checking the word list.
+// Catches: b1tch → bitch, wh0re → whore, f@ck → fack, $hit → shit
+const LEET = {'@':'a','4':'a','3':'e','1':'i','!':'i','0':'o','$':'s','5':'s','7':'t','+':'t','8':'b','2':'z','9':'g','6':'g'};
+
+function normaliseLeet(str) {
+  return str.toLowerCase().split('').map(c => LEET[c] || c).join('');
+}
+
+// Tokenise: split on anything that isn't a letter and check each token.
+// This handles "fuck!" "fuck." "fuck," and "fuckwit" correctly while
+// NOT matching "Scunthorpe" because 'cunt' won't be an isolated token there.
+// We also check the full normalised string for cases like "fuckhead" written
+// without separation.
+function isProfane(text) {
+  if (!text || !text.trim()) return false;
+
+  const check = (str) => {
+    // Tokenise into words
+    const tokens = str.toLowerCase().split(/[^a-z]+/).filter(Boolean);
+    // Check each token and also check the full string as one unit
+    return tokens.some(t => BLOCKED_WORDS.has(t)) ||
+           // Also check if any blocked word appears anywhere in the full string
+           // as a substring (catches concatenated words like "youfuckingidiot")
+           [...BLOCKED_WORDS].some(w => str.toLowerCase().includes(w));
+  };
+
+  // Run against both the original and leet-normalised versions
+  return check(text) || check(normaliseLeet(text));
+}
+
+// Field-level checker — applies/removes red error state on the element.
+// Returns true if clean, false if profane. Custom error message optional.
+function checkProfanity(el, errorMsg) {
+  if (!el) return true;
+  const val = el.value || '';
+  if (isProfane(val)) {
+    el.style.borderColor = 'var(--red)';
+    el.style.boxShadow   = '0 0 0 3px rgba(204,26,46,.15)';
+    let errEl = el.nextElementSibling;
+    if (!errEl || !errEl.classList.contains('profanity-err')) {
+      errEl = document.createElement('div');
+      errEl.className = 'profanity-err';
+      errEl.style.cssText = 'font-size:.7rem;color:var(--red);margin-top:4px;font-weight:500;display:block';
+      el.after(errEl);
+    }
+    errEl.textContent = errorMsg || '⚠️ This field contains inappropriate language — please review.';
+    errEl.style.display = 'block';
+    return false;
+  } else {
+    el.style.borderColor = '';
+    el.style.boxShadow   = '';
+    const errEl = el.nextElementSibling;
+    if (errEl?.classList.contains('profanity-err')) errEl.style.display = 'none';
+    return true;
+  }
+}
+
+// Bulk validator — checks all match-screen free-text fields at once.
+// Returns true only if ALL are clean. Scrolls to first dirty field.
+function allFieldsClean() {
+  const ids = ['note-def','note-att','note-gen','aw-magic'];
+  let allClean = true, firstDirty = null;
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (!checkProfanity(el)) { allClean = false; if (!firstDirty) firstDirty = el; }
+  });
+  if (!allClean && firstDirty) {
+    firstDirty.scrollIntoView({ behavior:'smooth', block:'center' });
+    showToast('⚠️ Please remove inappropriate language before saving');
+  }
+  return allClean;
+}
+
+// Attach blur listeners to live match fields so feedback is immediate.
+// Called at the end of renderMatch().
+function attachProfanityListeners() {
+  ['note-def','note-att','note-gen','aw-magic'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      // Remove any existing listener before adding to avoid duplicates
+      el.removeEventListener('blur', el._profanityBlur);
+      el._profanityBlur = () => checkProfanity(el);
+      el.addEventListener('blur', el._profanityBlur);
+    }
+  });
+}
+// ══════════════════════════════════════════════════════
+// Each ⓘ icon calls toggleTip(id) — it shows/hides the
+// corresponding .tip-box element. Only one is open at a time.
+function toggleTip(id) {
+  const box = document.getElementById(id);
+  if (!box) return;
+  const isOpen = box.classList.contains('show');
+  // Close all open tip boxes first
+  document.querySelectorAll('.tip-box.show').forEach(b => b.classList.remove('show'));
+  // Then open this one (unless it was already open — clicking again closes it)
+  if (!isOpen) box.classList.add('show');
+}
+
+// ══════════════════════════════════════════════════════
+//  SUCCESS OVERLAY (post-save coaching actions prompt)
+// ══════════════════════════════════════════════════════
+function closeSuccessOverlay() {
+  document.getElementById('success-overlay').style.display = 'none';
+  showTab('history');
+}
+
+async function goToCoachingActions() {
+  document.getElementById('success-overlay').style.display = 'none';
+  // Load matches fresh so we have the one we just saved
+  await loadMatches();
+  const idx = matches.findIndex(m => m.id === lastSavedMatchId);
+  if (idx >= 0) {
+    showTab('history'); // sets up the correct tab state
+    openDetail(idx);    // then opens the detail view for that match
+  } else {
+    showTab('history');
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  THEME ENGINE — Stage 3 ready
+//  In Stage 3, each club's profile will store primary,
+//  accent and a kit_pattern. applyTheme() reads those
+//  values and overwrites the CSS custom properties,
+//  instantly repainting every component in the app.
+//  For now it just applies the Gainline defaults.
+// ══════════════════════════════════════════════════════
+function applyTheme(club) {
+  const root = document.documentElement;
+  // If the club has custom colours stored, apply them.
+  // Otherwise the CSS defaults (navy + red) are already set.
+  if (club?.primary_colour) {
+    root.style.setProperty('--primary',    club.primary_colour);
+    root.style.setProperty('--primary-dk', darken(club.primary_colour, 15));
+    root.style.setProperty('--primary-dp', darken(club.primary_colour, 30));
+  }
+  if (club?.accent_colour) {
+    root.style.setProperty('--accent',    club.accent_colour);
+    root.style.setProperty('--accent-dk', darken(club.accent_colour, 15));
+  }
+}
+
+// Utility — darken a hex colour by a given percentage
+function darken(hex, pct) {
+  const n = parseInt(hex.replace('#',''), 16);
+  const f = 1 - pct / 100;
+  const r = Math.max(0, Math.round(((n >> 16) & 255) * f));
+  const g = Math.max(0, Math.round(((n >>  8) & 255) * f));
+  const b = Math.max(0, Math.round(( n        & 255) * f));
+  return `#${[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('')}`;
+}
+async function boot() {
+  const { data: { session } } = await sb.auth.getSession();
+
+  if (session?.user) {
+    // Already logged in — load profile normally
+    currentUser = session.user;
+    await loadProfile();
+  } else {
+    // Not logged in — check for invite token first
+    const hasInvite = await checkInviteToken();
+    // checkInviteToken returns true if it found a valid token and showed register screen
+    // Only show login screen if there's no invite handling it
+    if (!hasInvite) {
+      showAuthScreen('login-screen');
+    }
+  }
+
+  // Listen for auth state changes (login, logout, registration)
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (session?.user) {
+      currentUser = session.user;
+      await loadProfile();
+    } else {
+      currentUser = null;
+      currentProfile = null;
+      showAuthScreen('login-screen');
+    }
+  });
+}
+
+async function loadProfile() {
+  console.log('loadProfile: fetching for', currentUser?.email);
+  const { data, error } = await sb
+    .from('profiles')
+    .select('*, clubs(name)')
+    .eq('id', currentUser.id)
+    .single();
+
+  if (error) {
+    console.error('loadProfile error:', error.message, error.code);
+    showAuthScreen('pending-screen');
+    return;
+  }
+  if (!data) {
+    console.error('loadProfile: no data returned');
+    showAuthScreen('pending-screen');
+    return;
+  }
+
+  console.log('loadProfile: got profile', data.email, 'approved:', data.approved, 'club_id:', data.club_id, 'role:', data.role);
+  currentProfile = data;
+
+  if (!data.approved) {
+    // Populate the pending screen with their own details so it feels personal
+    const detailsEl = document.getElementById('pending-details');
+    if (detailsEl) {
+      const clubName = data.clubs?.name || 'your club';
+      detailsEl.innerHTML = `
+        <div><strong>Name:</strong> ${esc(data.full_name||'—')}</div>
+        <div><strong>Email:</strong> ${esc(data.email||'—')}</div>
+        <div><strong>Club:</strong> ${esc(clubName)}</div>
+        <div><strong>Requested Role:</strong> ${esc(data.role||'coach')}</div>`;
+      detailsEl.style.display = 'block';
+    }
+    showAuthScreen('pending-screen');
+    return;
+  }
+
+  // Show main app
+  document.getElementById('auth-root').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  document.getElementById('app').style.flexDirection = 'column';
+
+  const clubName = data.clubs?.name || 'RL Tracker';
+  document.getElementById('h-club-name').textContent = clubName;
+
+  // Apply club theme colours (uses defaults if no custom colours set)
+  applyTheme(data.clubs);
+
+  if (data.role === 'admin' || currentUser.email === ADMIN_EMAIL) {
+    const adminTab = document.getElementById('tab-admin');
+    adminTab.style.display = 'flex';
+    adminTab.style.flexDirection = 'column';
+    adminTab.style.alignItems = 'center';
+  }
+
+  document.getElementById('sdot').style.display = 'block';
+
+  console.log('loadProfile: loading roster and fixtures...');
+  await loadRoster();
+  await loadFixtures();
+  console.log('loadProfile: roster:', roster.length, 'fixtures:', fixtures.length);
+  showTab('home');
+}
+
+function showAuthScreen(id) {
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('auth-root').style.display = 'flex';
+  document.getElementById('auth-root').style.flexDirection = 'column';
+  document.getElementById('auth-root').style.minHeight = '100vh';
+  ['login-screen','register-screen','pending-screen'].forEach(s => {
+    document.getElementById(s).style.display = s === id ? 'flex' : 'none';
+  });
+}
+
+// ══════════════════════════════════════════════════════
+//  AUTH
+// ══════════════════════════════════════════════════════
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pw    = document.getElementById('login-pw').value;
+  const errEl = document.getElementById('login-err');
+  errEl.style.display = 'none';
+  if (!email || !pw) { errEl.textContent = 'Please enter your email and password.'; errEl.style.display = 'block'; return; }
+  const { error } = await sb.auth.signInWithPassword({ email, password: pw });
+  if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; }
+}
+
+function toggleRoleInfo() {
+  document.getElementById('role-info').classList.toggle('show');
+}
+
+async function doRegister() {
+  const name  = document.getElementById('reg-name').value.trim();
+  const club  = document.getElementById('reg-club').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const pw    = document.getElementById('reg-pw').value;
+  const role  = document.getElementById('reg-role')?.value || 'coach';
+  const errEl = document.getElementById('reg-err');
+  errEl.style.display = 'none';
+  if (!name||!club||!email||!pw) { errEl.textContent='Please fill in all fields.'; errEl.style.display='block'; return; }
+  if (pw.length < 8) { errEl.textContent='Password must be at least 8 characters.'; errEl.style.display='block'; return; }
+
+  const { data, error } = await sb.auth.signUp({
+    email, password: pw,
+    options: {
+      data: { full_name: name, club_name: club, requested_role: role },
+      emailRedirectTo: null
+    }
+  });
+  if (error) { errEl.textContent=error.message; errEl.style.display='block'; return; }
+
+  if (data?.user) {
+    // Process invite token if present — auto-approves and links to club
+    await processInvite(data.user.id);
+
+    // Auto-match club name — look for an existing club that matches what they typed.
+    // We do a case-insensitive search so "sherburn bears" matches "Sherburn Bears ARLFC".
+    const { data: clubs } = await sb.from('clubs').select('id, name');
+    let matchedClubId = null;
+    if (clubs?.length) {
+      // First try exact match, then partial match
+      const clubLower = club.toLowerCase();
+      const exact = clubs.find(c => c.name.toLowerCase() === clubLower);
+      const partial = clubs.find(c =>
+        c.name.toLowerCase().includes(clubLower) ||
+        clubLower.includes(c.name.toLowerCase().split(' ')[0]) // match on first word
+      );
+      matchedClubId = exact?.id || partial?.id || null;
+    }
+
+    // Update profile with name, role and matched club_id if found
+    await sb.from('profiles')
+      .update({
+        full_name: name,
+        role: role,
+        ...(matchedClubId ? { club_id: matchedClubId } : {})
+      })
+      .eq('id', data.user.id);
+
+    // If no match found, store club name as metadata so admin can resolve it
+    if (!matchedClubId) {
+      console.log(`No club match found for "${club}" — admin will need to assign manually`);
+    }
+  }
+
+  showToast('Request sent! Awaiting admin approval.');
+  showAuthScreen('pending-screen');
+}
+
+function doLogout() {
+  sb.auth.signOut();
+  active = null;
+  matches = [];
+  roster = [];
+  fixtures = [];
+}
+
+function showLogin()    { showAuthScreen('login-screen'); }
+function showRegister() { showAuthScreen('register-screen'); }
+
+// ══════════════════════════════════════════════════════
+//  DATA LOADING
+// ══════════════════════════════════════════════════════
+async function loadRoster() {
+  if (!currentProfile?.club_id) { roster = []; return; }
+  try {
+    const { data, error } = await sb
+      .from('players')
+      .select('*')
+      .eq('club_id', currentProfile.club_id)
+      .order('shirt_no');
+    if (error) { console.error('loadRoster error:', error.message); roster = []; return; }
+    roster = data || [];
+    // Only seed if admin account and no players exist yet
+    if (roster.length === 0 &&
+        currentProfile.role === 'admin' &&
+        currentProfile.clubs?.name?.toLowerCase().includes('sherburn')) {
+      await seedDefaultRoster();
+    }
+  } catch(e) {
+    console.error('loadRoster exception:', e);
+    roster = [];
+  }
+}
+
+async function seedDefaultRoster() {
+  const defaults = [
+    {no:1,name:'Rhys'},{no:2,name:'Fraser'},{no:2,name:'Harry'},
+    {no:3,name:'Holden'},{no:4,name:'Harrison H.'},{no:5,name:'Joseph'},
+    {no:6,name:'Charlie'},{no:7,name:'Harrison S.'},{no:8,name:'Daniel'},
+    {no:9,name:'Ned'},{no:10,name:'George'},{no:11,name:'Noah'},
+    {no:13,name:'Olly'},{no:14,name:'James'},{no:15,name:'Rory'},
+    {no:16,name:'Henry'},{no:17,name:'Grayson'},
+  ];
+  const rows = defaults.map(p => ({ club_id: currentProfile.club_id, shirt_no: p.no, display_name: p.name }));
+  const { data } = await sb.from('players').insert(rows).select();
+  if (data) roster = data;
+}
+
+async function loadMatches() {
+  if (!currentProfile?.club_id) return [];
+  const { data, error } = await sb
+    .from('matches')
+    .select(`*, match_players(*)`)
+    .eq('club_id', currentProfile.club_id)
+    .order('match_date', { ascending: false });
+  if (error) {
+    console.error('loadMatches error:', error.message);
+    return [];
+  }
+  matches = data || [];
+  return matches;
+}
+
+async function loadFixtures() {
+  if (!currentProfile?.club_id) { fixtures = []; return; }
+  try {
+    const { data, error } = await sb
+      .from('fixtures')
+      .select('*')
+      .eq('club_id', currentProfile.club_id)
+      .order('match_date');
+    if (error) { console.error('loadFixtures error:', error.message); fixtures = []; return; }
+    fixtures = data || [];
+  } catch(e) {
+    console.error('loadFixtures exception:', e);
+    fixtures = [];
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  NAV
+// ══════════════════════════════════════════════════════
+function showTab(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('ds').classList.remove('active');
+  document.getElementById('screen-'+name).classList.add('active');
+  const tab = document.getElementById('tab-'+name);
+  if (tab) tab.classList.add('active');
+  if (name==='home')     renderHome();
+  if (name==='match')    renderMatch();
+  if (name==='fixtures') renderFixtures();
+  if (name==='history')  renderHistoryScreen();
+  if (name==='awards')   renderAwards();
+  if (name==='export')   renderExport();
+  if (name==='hub')      renderHub();
+  if (name==='roster')   renderRoster();
+  if (name==='admin')    renderAdmin();
+}
+
+// ══════════════════════════════════════════════════════
+//  NAME WARNING (GDPR)
+// ══════════════════════════════════════════════════════
+// Known rugby/sports club words that should never trigger the name warning
+const CLUB_WORDS = /bears|bulls|tigers|lions|wolves|hawks|eagles|rovers|rangers|united|city|town|athletic|arlfc|rlfc|afc|fc|rfc|juniors|colts|warriors|dragons|knights|saints|jets|broncos|sharks|eels|roosters|raiders|storm|cowboys|panthers|titans|bulldogs|rabbitohs|wests|south|north|east|west|central|kings|academy|youth|community/i;
+
+function looksLikeFullName(val) {
+  const v = val.trim();
+  // If it contains any known club/team words, it's definitely not a personal name
+  if (CLUB_WORDS.test(v)) return false;
+  // Must be exactly two words, both starting with a capital, each 2-15 chars
+  // This avoids triggering on club names, abbreviations, etc.
+  const personalName = /^[A-Z][a-z]{1,14} [A-Z][a-z]{1,14}$/.test(v);
+  // Double-barrelled surname: Firstname Taylor-Wray
+  const doubleBarrel = /^[A-Z][a-z]{1,14} [A-Z][a-z]+-[A-Z][a-z]+$/.test(v);
+  return personalName || doubleBarrel;
+}
+function checkName(input, warnId) {
+  const warn = document.getElementById(warnId);
+  if (!warn) return;
+  if (looksLikeFullName(input.value)) {
+    warn.classList.add('show');
+    // Hard block — clear the surname part
+    const parts = input.value.trim().split(/[\s-]/);
+    if (parts.length > 1) {
+      showToast('⚠️ Full names not allowed — first name only please');
+      // Don't clear, just warn — let them correct manually
+    }
+  } else {
+    warn.classList.remove('show');
+  }
+}
+function checkPlayerName(input) {
+  const v = input.value.trim();
+  if (looksLikeFullName(v)) {
+    input.style.borderColor = 'var(--red)';
+    input.title = 'Full names not permitted — first name only';
+    showToast('⚠️ Use first name only — no surnames please');
+  } else {
+    input.style.borderColor = '';
+    input.title = '';
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  HOME SCREEN
+// ══════════════════════════════════════════════════════
+// ── Expand/collapse the manual match setup card ──────
+function toggleMatchSetup() {
+  const body  = document.getElementById('match-setup-body');
+  const label = document.getElementById('setup-toggle-label');
+  const open  = body.style.display !== 'none';
+  body.style.display  = open ? 'none' : 'block';
+  label.textContent   = open ? '+ Set Up Match Manually' : '− Set Up Match Manually';
+}
+
+function renderHome() {
+  try {
+    // Set today's date — element may be inside hidden section so check first
+    const di = document.getElementById('match-date');
+    if (di && !di.value) di.value = new Date().toISOString().slice(0,10);
+
+    // Populate club name datalist
+    const dl = document.getElementById('club-suggestions');
+    if (dl && currentProfile?.clubs?.name) {
+      dl.innerHTML = `<option value="${esc(currentProfile.clubs.name)}">`;
+    }
+
+    const today    = new Date().toISOString().slice(0,10);
+    const upcoming = (fixtures || [])
+      .filter(f => f.match_date >= today)
+      .sort((a,b) => a.match_date.localeCompare(b.match_date));
+    const next = upcoming[0] || null;
+
+    const section    = document.getElementById('home-fixtures-section');
+    const setupBody  = document.getElementById('match-setup-body');
+    const setupLabel = document.getElementById('setup-toggle-label');
+
+    // Guard — if any key element is missing, bail gracefully
+    if (!section || !setupBody || !setupLabel) {
+      console.error('renderHome: missing DOM elements');
+      return;
+    }
+
+    if (upcoming.length === 0) {
+      setupBody.style.display = 'block';
+      setupLabel.textContent  = '− Set Up Match Manually';
+      section.innerHTML = `
+        <div style="background:linear-gradient(135deg,var(--blue-dk),var(--blue));border-radius:var(--r);padding:18px 16px;margin-bottom:12px;box-shadow:var(--sh-md)">
+          <div style="font-family:'Oswald',sans-serif;font-size:.65rem;text-transform:uppercase;letter-spacing:.14em;color:rgba(255,255,255,.55);margin-bottom:6px">Getting Started</div>
+          <div style="font-family:'Oswald',sans-serif;font-size:1.15rem;font-weight:700;color:white;margin-bottom:8px;line-height:1.2">Add your first fixture</div>
+          <div style="font-size:.82rem;color:rgba(255,255,255,.7);margin-bottom:14px;line-height:1.5">Add your upcoming fixtures and on matchday you can start tracking in one tap.</div>
+          <button onclick="showTab('fixtures')" style="background:var(--red);color:white;border:none;border-radius:var(--r-sm);padding:10px 18px;font-family:'Oswald',sans-serif;font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;box-shadow:0 2px 10px rgba(204,26,46,.4)">
+            📅 &nbsp;Add Fixtures →
+          </button>
+        </div>`;
+    } else {
+      setupBody.style.display = 'none';
+      setupLabel.textContent  = '+ Set Up Match Manually';
+
+      const daysUntil = Math.round((new Date(next.match_date) - new Date(today)) / 86400000);
+      const daysLabel = daysUntil === 0 ? '🔴 Today' : daysUntil === 1 ? '⏰ Tomorrow' : `📅 In ${daysUntil} days`;
+
+      section.innerHTML = `
+        <div style="background:linear-gradient(135deg,var(--blue-dk),var(--blue));border-radius:var(--r);padding:16px;margin-bottom:12px;box-shadow:var(--sh-md)">
+          <div style="font-family:'Oswald',sans-serif;font-size:.6rem;text-transform:uppercase;letter-spacing:.14em;color:rgba(255,255,255,.5);margin-bottom:6px">Next Match</div>
+          <div style="font-family:'Oswald',sans-serif;font-size:1.2rem;font-weight:700;color:white;margin-bottom:3px">${esc(next.home_team)} vs ${esc(next.away_team)}</div>
+          <div style="font-size:.78rem;color:rgba(255,255,255,.65);margin-bottom:12px">${daysLabel} &nbsp;·&nbsp; ${fmtD(next.match_date)}${next.competition?' &nbsp;·&nbsp; '+esc(next.competition):''}</div>
+          <button onclick="trackFromFixture('${next.id}')" style="background:var(--red);color:white;border:none;border-radius:var(--r-sm);padding:11px 20px;font-family:'Oswald',sans-serif;font-size:.85rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;box-shadow:0 2px 10px rgba(204,26,46,.4);width:100%">
+            ▶ &nbsp;Start Tracking This Match
+          </button>
+        </div>
+        ${upcoming.length > 1 ? `<div style="font-size:.76rem;color:var(--grey-lt);margin-bottom:10px;padding-left:2px">
+          ${upcoming.length - 1} more fixture${upcoming.length > 2?'s':''} upcoming —
+          <span style="color:var(--blue);cursor:pointer;font-weight:600" onclick="showTab('fixtures')">view all</span>
+        </div>` : ''}`;
+
+      // Pre-fill manual form
+      if (di) di.value = next.match_date;
+      const ht = document.getElementById('home-team');
+      const at = document.getElementById('away-team');
+      const ct = document.getElementById('match-comp');
+      if (ht) ht.value = next.home_team;
+      if (at) at.value = next.away_team;
+      if (ct) ct.value = next.competition || '';
+    }
+
+    // Fixture picker in manual form
+    const fp     = document.getElementById('fixture-picker');
+    const fpWrap = document.getElementById('fixture-picker-wrap');
+    if (fp && fpWrap) {
+      if (upcoming.length > 0) {
+        fpWrap.style.display = 'block';
+        fp.innerHTML = '<option value="">— Select fixture —</option>' +
+          upcoming.map(f => `<option value="${f.id}">${fmtD(f.match_date)} · ${f.home_team} v ${f.away_team}</option>`).join('');
+      } else {
+        fpWrap.style.display = 'none';
+      }
+    }
+
+    // Squad list
+    const sl = document.getElementById('squad-list');
+    if (sl) {
+      sl.innerHTML = roster.length === 0
+        ? `<div class="empty"><div class="empty-icon">👥</div><p>No players yet.<br><span style="color:var(--blue);cursor:pointer;font-weight:600" onclick="showTab('roster')">Add players in Squad →</span></p></div>`
+        : roster.map((p,i) => `
+          <div class="p-row">
+            <div class="shirt"><span class="shirt-n">${p.shirt_no}</span></div>
+            <span class="p-name">${p.display_name}</span>
+            <button class="tog on" id="tog-${i}" onclick="this.classList.toggle('on')"></button>
+          </div>`).join('');
+    }
+  } catch(e) {
+    console.error('renderHome crashed:', e);
+  }
+}
+
+function loadFixture() {
+  const sel = document.getElementById('fixture-picker');
+  if (!sel.value) return;
+  const fx = fixtures.find(f => f.id === sel.value);
+  if (!fx) return;
+  document.getElementById('match-date').value = fx.match_date;
+  document.getElementById('home-team').value  = fx.home_team;
+  document.getElementById('away-team').value  = fx.away_team;
+  document.getElementById('match-comp').value = fx.competition || '';
+}
+
+function fErr(id, has) {
+  const w = document.getElementById(id);
+  if (w) w.classList.toggle('err', has);
+}
+
+function startMatch() {
+  const date = document.getElementById('match-date').value;
+  const home = document.getElementById('home-team').value.trim();
+  const away = document.getElementById('away-team').value.trim();
+  fErr('f-date', !date); fErr('f-home', !home); fErr('f-away', !away);
+  const playing = roster.map((_,i)=>i).filter(i => document.getElementById('tog-'+i)?.classList.contains('on'));
+  document.getElementById('squad-err').style.display = playing.length ? 'none' : 'block';
+  if (!date||!home||!away||!playing.length) { showToast('Please fill in all required fields'); return; }
+  // Check for personal names in team name fields (soft warning only, don't block)
+  if (looksLikeFullName(home)||looksLikeFullName(away)) {
+    showToast('⚠️ Tip: Use team names rather than personal names');
+    // Don't block — just warn
+  }
+  const fxSel = document.getElementById('fixture-picker');
+  active = {
+    fixture_id: fxSel?.value || null,
+    date, homeTeam: home, awayTeam: away,
+    competition: document.getElementById('match-comp').value.trim(),
+    score: {home:0, away:0},
+    sets: {complete:0, incomplete:0},
+    players: playing.map(i => ({
+      id: roster[i].id,
+      no: roster[i].shirt_no,
+      name: roster[i].display_name,
+      tackles:0, hitups:0, tries:0, offloads:0, tryAssists:0
+    })),
+    notes: {def:'', att:'', gen:''},
+    awards: {opp:'', cch:'', par:'', magic:''}
+  };
+  showTab('match');
+}
+
+// ══════════════════════════════════════════════════════
+//  LIVE MATCH
+// ══════════════════════════════════════════════════════
+function renderMatch() {
+  const widget = document.getElementById('score-widget');
+  if (!active) {
+    widget.classList.remove('show');
+    document.getElementById('player-cards').innerHTML = '<div class="empty"><div class="empty-icon">🏉</div><p>No match in progress.<br>Go to Home to start one.</p></div>';
+    document.getElementById('live-title').textContent = '—';
+    document.getElementById('live-date').textContent  = '—';
+    return;
+  }
+  widget.classList.add('show');
+  document.getElementById('live-title').textContent = `${active.homeTeam} v ${active.awayTeam}`;
+  document.getElementById('live-date').textContent  = fmtD(active.date);
+  document.getElementById('s-home-name').textContent = active.homeTeam;
+  document.getElementById('s-away-name').textContent = active.awayTeam;
+  document.getElementById('s-home-val').textContent  = active.score.home;
+  document.getElementById('s-away-val').textContent  = active.score.away;
+  // Clear fields
+  ['note-def','note-att','note-gen','aw-magic'].forEach(id => { const el=document.getElementById(id); if(el)el.value=''; });
+  ['f-def','f-att','f-gen'].forEach(id => { const el=document.getElementById(id); if(el)el.classList.remove('err'); });
+  updateSetsDisplay();
+  const stats   = ['tackles','hitups','tries','offloads','tryAssists'];
+  const icons   = {tackles:'🛡️',hitups:'💥',tries:'🏆',offloads:'🤝',tryAssists:'⭐'};
+  const lbls    = {tackles:'Tackles',hitups:'Hit Ups',tries:'Tries',offloads:'Offloads',tryAssists:'T.Assist'};
+  document.getElementById('player-cards').innerHTML = active.players.map((p,pi) => `
+    <div class="pc">
+      <div class="pc-head">
+        <div class="shirt sm"><span class="shirt-n">${p.no}</span></div>
+        <span class="pc-name">${playerLabel(p)}</span>
+      </div>
+      <div class="sg">
+        ${stats.map(s=>`<button class="sb" onclick="addStat(${pi},'${s}')">
+          <span class="si">${icons[s]}</span>
+          <span class="sv ${p[s]?'hot':''}" id="sv-${pi}-${s}">${p[s]}</span>
+          <span class="sl">${lbls[s]}</span>
+        </button>`).join('')}
+      </div>
+      <div class="undo-row"><button class="undo-btn" onclick="undoLast(${pi})">↩ Undo</button></div>
+    </div>`).join('');
+  // Award dropdowns — show shirt number + initials, store shirt number as value
+  // so we never store a full name in the awards JSON
+  const pOpts  = '<option value="">— Select player —</option>' +
+    active.players.map(p => `<option value="${p.no}">${p.no} — ${playerLabel(p)}</option>`).join('');
+  const p2Opts = '<option value="">— Optional second player —</option>' +
+    active.players.map(p => `<option value="${p.no}">${p.no} — ${playerLabel(p)}</option>`).join('');
+  ['opp','cch','par'].forEach(k => {
+    document.getElementById(`aw-${k}-1`).innerHTML = pOpts;
+    document.getElementById(`aw-${k}-2`).innerHTML = p2Opts;
+    document.getElementById(`aw-${k}-2w`).classList.remove('show');
+  });
+  // Attach blur-based profanity checking to all free-text fields
+  attachProfanityListeners();
+}
+
+function isSherburn(t) { return /sherburn|bears/i.test(t||''); }
+
+function addStat(pi, stat) {
+  if (!active) return;
+  active.players[pi][stat]++;
+  lastA[pi] = stat;
+  const el = document.getElementById(`sv-${pi}-${stat}`);
+  el.textContent = active.players[pi][stat];
+  el.classList.add('hot');
+  if (stat==='tries') {
+    const side = isSherburn(active.homeTeam) ? 'home' : 'away';
+    active.score[side]++;
+    document.getElementById(`s-${side}-val`).textContent = active.score[side];
+    showToast('Try! Score updated 🏆');
+  }
+}
+
+function undoLast(pi) {
+  if (!active||!lastA[pi]) { showToast('Nothing to undo'); return; }
+  const s = lastA[pi];
+  if (active.players[pi][s] > 0) {
+    active.players[pi][s]--;
+    const el = document.getElementById(`sv-${pi}-${s}`);
+    el.textContent = active.players[pi][s];
+    if (!active.players[pi][s]) el.classList.remove('hot');
+    if (s==='tries') {
+      const side = isSherburn(active.homeTeam) ? 'home' : 'away';
+      active.score[side] = Math.max(0, active.score[side]-1);
+      document.getElementById(`s-${side}-val`).textContent = active.score[side];
+    }
+    delete lastA[pi];
+    showToast('Undone ✓');
+  }
+}
+
+function adjScore(side, delta) {
+  if (!active) return;
+  active.score[side] = Math.max(0, active.score[side]+delta);
+  document.getElementById(`s-${side}-val`).textContent = active.score[side];
+}
+
+function addSet(type) {
+  if (!active) return;
+  active.sets[type]++;
+  updateSetsDisplay();
+}
+
+function updateSetsDisplay() {
+  if (!active) return;
+  const {complete, incomplete} = active.sets;
+  const total = complete + incomplete;
+  const pctEl = document.getElementById('sets-pct');
+  const detEl = document.getElementById('sets-detail');
+  if (total === 0) {
+    pctEl.textContent = '—%';
+    detEl.textContent = 'No sets recorded';
+  } else {
+    const pct = Math.round((complete / total) * 100);
+    pctEl.textContent = pct + '%';
+    detEl.textContent = `${complete}/${total} sets complete`;
+    pctEl.style.color = pct >= 80 ? '#4ade80' : pct >= 60 ? '#facc15' : '#f87171';
+  }
+}
+
+function awChange(k) {
+  const v = document.getElementById(`aw-${k}-1`).value;
+  document.getElementById(`aw-${k}-2w`).classList.toggle('show', !!v);
+}
+
+function syncData() {
+  if (!active) return;
+  active.notes.def = document.getElementById('note-def').value;
+  active.notes.att = document.getElementById('note-att').value;
+  active.notes.gen = document.getElementById('note-gen').value;
+  const av = k => {
+    const v1 = document.getElementById(`aw-${k}-1`)?.value||'';
+    const v2 = document.getElementById(`aw-${k}-2`)?.value||'';
+    return v2 ? `${v1} & ${v2}` : v1;
+  };
+  active.awards = { opp:av('opp'), cch:av('cch'), par:av('par'), magic:(document.getElementById('aw-magic')?.value||'').trim() };
+}
+
+function reqSave() {
+  if (!active) return;
+  syncData();
+
+  // Run profanity check across all free-text fields first
+  if (!allFieldsClean()) return;
+
+  let ok=true, first=null;
+  ['def','att','gen'].forEach(k => {
+    const empty = !document.getElementById(`note-${k}`).value.trim();
+    fErr(`f-${k}`, empty);
+    if (empty) { ok=false; if(!first) first=`note-${k}`; }
+  });
+  ['opp','cch','par'].forEach(k => {
+    const empty = !document.getElementById(`aw-${k}-1`)?.value;
+    const e = document.getElementById(`aw-${k}-err`); if(e) e.style.display = empty?'block':'none';
+    if (empty) { ok=false; if(!first) first=`aw-${k}-1`; }
+  });
+  if (!ok) { showToast('Please fill in all required fields'); if(first) document.getElementById(first)?.scrollIntoView({behavior:'smooth',block:'center'}); return; }
+  const t = totals(active);
+  const s = active.score;
+  document.getElementById('cmsg').textContent = `${active.homeTeam} ${s.home} – ${s.away} ${active.awayTeam} · ${fmtD(active.date)} · ${active.players.length} players · ${t.tries} tries`;
+  document.getElementById('co').classList.add('show');
+}
+
+function closeCo() { document.getElementById('co').classList.remove('show'); }
+
+async function doSave() {
+  closeCo();
+  if (!active) return;
+  syncData();
+  // Insert match
+  const { data: match, error } = await sb.from('matches').insert({
+    club_id:      currentProfile.club_id,
+    fixture_id:   active.fixture_id,
+    match_date:   active.date,
+    home_team:    active.homeTeam,
+    away_team:    active.awayTeam,
+    score_home:   active.score.home,
+    score_away:   active.score.away,
+    sets_complete:   active.sets.complete,
+    sets_incomplete: active.sets.incomplete,
+    note_defence: active.notes.def,
+    note_attack:  active.notes.att,
+    note_general: active.notes.gen,
+    awards:       active.awards,
+    created_by:   currentUser.id
+  }).select().single();
+
+  if (error) { showToast('Save failed — ' + error.message); return; }
+
+  // Insert player stats
+  const playerRows = active.players.map(p => ({
+    match_id:    match.id,
+    player_id:   p.id,
+    display_name: p.name,
+    shirt_no:    p.no,
+    tackles:     p.tackles,
+    hitups:      p.hitups,
+    tries:       p.tries,
+    offloads:    p.offloads,
+    try_assists: p.tryAssists
+  }));
+  await sb.from('match_players').insert(playerRows);
+
+  active = null;
+  showToast('Match saved! 🏉');
+  // Show coaching actions prompt
+  document.getElementById('success-overlay').style.display = 'flex';
+  lastSavedMatchId = match.id;
+}
+
+function discardMatch() {
+  if (!confirm('Discard this match?')) return;
+  active = null; showTab('home');
+}
+
+// ══════════════════════════════════════════════════════
+//  FIXTURES
+// ══════════════════════════════════════════════════════
+async function addFixture() {
+  const date = document.getElementById('fx-date').value;
+  const home = document.getElementById('fx-home').value.trim();
+  const away = document.getElementById('fx-away').value.trim();
+  const comp = document.getElementById('fx-comp').value.trim();
+  if (!date||!home||!away) { showToast('Please fill in date and both teams'); return; }
+  const { error } = await sb.from('fixtures').insert({ club_id: currentProfile.club_id, match_date: date, home_team: home, away_team: away, competition: comp||null });
+  if (error) { showToast('Error: ' + error.message); return; }
+  document.getElementById('fx-date').value = '';
+  document.getElementById('fx-home').value = '';
+  document.getElementById('fx-away').value = '';
+  document.getElementById('fx-comp').value = '';
+  await loadFixtures();
+  renderFixtures();
+  showToast('Fixture added ✓');
+}
+
+function renderFixtures() {
+  const el = document.getElementById('fixtures-list');
+  if (!fixtures.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📅</div><p>No fixtures added yet.<br>Add your first fixture above.</p></div>';
+    return;
+  }
+  const today   = new Date().toISOString().slice(0,10);
+  const upcoming = fixtures.filter(f => f.match_date >= today).sort((a,b) => a.match_date.localeCompare(b.match_date));
+  const past     = fixtures.filter(f => f.match_date <  today).sort((a,b) => b.match_date.localeCompare(a.match_date));
+  const sorted   = [...upcoming, ...past];
+
+  el.innerHTML = [
+    upcoming.length ? `<div style="font-family:'Oswald',sans-serif;font-size:.62rem;text-transform:uppercase;letter-spacing:.12em;color:var(--grey-lt);margin-bottom:8px;padding-left:2px">Upcoming</div>` : '',
+    ...upcoming.map(f => fixtureCard(f, false)),
+    past.length ? `<div style="font-family:'Oswald',sans-serif;font-size:.62rem;text-transform:uppercase;letter-spacing:.12em;color:var(--grey-lt);margin:12px 0 8px;padding-left:2px">Past</div>` : '',
+    ...past.map(f => fixtureCard(f, true)),
+  ].join('');
+}
+
+function fixtureCard(f, isPast) {
+  return `<div class="fx-card ${isPast?'fx-past':'fx-upcoming'}">
+    <div style="flex:1">
+      <div class="fx-date">${fmtD(f.match_date)}${f.competition?' · '+f.competition:''}</div>
+      <div class="fx-teams">${f.home_team} vs ${f.away_team}</div>
+    </div>
+    ${!isPast?`<button class="fx-track" onclick="trackFromFixture('${f.id}')">▶ Track</button>`:'<span class="badge badge-blue" style="flex-shrink:0">Past</span>'}
+    <button onclick="deleteFixture('${f.id}')" style="background:none;border:none;color:#ef4444;cursor:pointer;padding:4px;font-size:1rem;flex-shrink:0">✕</button>
+  </div>`;
+}
+
+function trackFromFixture(fxId) {
+  const fx = fixtures.find(f => f.id === fxId);
+  if (!fx) return;
+  document.getElementById('fixture-picker').value = fxId;
+  document.getElementById('match-date').value = fx.match_date;
+  document.getElementById('home-team').value  = fx.home_team;
+  document.getElementById('away-team').value  = fx.away_team;
+  document.getElementById('match-comp').value = fx.competition||'';
+  showTab('home');
+}
+
+async function deleteFixture(id) {
+  if (!confirm('Delete this fixture?')) return;
+  await sb.from('fixtures').delete().eq('id', id);
+  await loadFixtures();
+  renderFixtures();
+}
+
+// ══════════════════════════════════════════════════════
+//  HISTORY
+// ══════════════════════════════════════════════════════
+async function renderHistoryScreen() {
+  const el = document.getElementById('history-list');
+  const banner = document.getElementById('season-stats-banner');
+  el.innerHTML = '<div class="spinner"><div class="spin-ring"></div>Loading…</div>';
+  if (banner) banner.innerHTML = '';
+
+  let ms = [];
+  try { ms = await loadMatches(); }
+  catch(e) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><p>Couldn\'t load matches.<br>Check your connection and try again.</p></div>';
+    return;
+  }
+
+  if (!ms.length) {
+    el.innerHTML='<div class="empty"><div class="empty-icon">📚</div><p>No matches saved yet.<br>Start tracking from the Home tab.</p></div>';
+    return;
+  }
+
+  // ── Season stats banner ─────────────────────────
+  const currentYear = new Date().getFullYear().toString();
+  const thisYear    = ms.filter(m => (m.match_date||'').startsWith(currentYear));
+
+  if (thisYear.length > 0 && banner) {
+    // Calculate stats from this season
+    const clubName = currentProfile?.clubs?.name || '';
+    const isSherb  = t => /sherburn|bears/i.test(t||'');
+
+    let wins=0, losses=0, draws=0;
+    let totalTackles=0, totalTries=0, totalSets=0, totalComplete=0, matchCount=0;
+
+    thisYear.forEach(m => {
+      // Win/loss based on score
+      const isHome = isSherb(m.home_team);
+      const us     = isHome ? (m.score_home||0) : (m.score_away||0);
+      const them   = isHome ? (m.score_away||0) : (m.score_home||0);
+      if (m.score_home !== null) {
+        if (us > them) wins++;
+        else if (us < them) losses++;
+        else draws++;
+      }
+      // Stats
+      const pl = m.match_players || [];
+      pl.forEach(p => { totalTackles += p.tackles||0; totalTries += p.tries||0; });
+      totalSets    += (m.sets_complete||0) + (m.sets_incomplete||0);
+      totalComplete += m.sets_complete||0;
+      matchCount++;
+    });
+
+    const avgTackles = matchCount ? (totalTackles / matchCount).toFixed(1) : '—';
+    const avgTries   = matchCount ? (totalTries   / matchCount).toFixed(1) : '—';
+    const setsPct    = totalSets  ? Math.round((totalComplete / totalSets) * 100) + '%' : '—';
+    const record     = `${wins}W ${draws>0?draws+'D ':''}${losses}L`;
+
+    banner.innerHTML = `
+      <div style="background:linear-gradient(135deg,var(--blue-dp) 0%,var(--blue-dk) 60%,#1a0a2e 100%);border-radius:var(--r);padding:14px 16px 12px;margin-bottom:14px;box-shadow:var(--sh-md);position:relative;overflow:hidden">
+        <!-- Subtle pitch watermark -->
+        <div style="position:absolute;top:-10px;right:-20px;opacity:.06;pointer-events:none">
+          <svg width="120" height="80" viewBox="0 0 120 80" fill="none" stroke="white" stroke-width="1.5">
+            <rect x="5" y="5" width="110" height="70" rx="2"/>
+            <line x1="60" y1="5" x2="60" y2="75"/>
+            <ellipse cx="60" cy="40" rx="14" ry="14"/>
+          </svg>
+        </div>
+        <!-- Season label -->
+        <div style="font-family:'Oswald',sans-serif;font-size:.58rem;text-transform:uppercase;letter-spacing:.18em;color:rgba(255,255,255,.4);margin-bottom:10px">
+          Season ${currentYear} &nbsp;·&nbsp; ${matchCount} game${matchCount!==1?'s':''}
+        </div>
+        <!-- Single row of 4 stats -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
+          ${[
+            {
+              val: record,
+              lbl: 'Record',
+              svg: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>`,
+              colour: wins > losses ? '#4ade80' : wins < losses ? '#f87171' : '#facc15'
+            },
+            {
+              val: avgTackles,
+              lbl: 'Avg Tackles',
+              svg: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+              colour: '#60a5fa'
+            },
+            {
+              val: avgTries,
+              lbl: 'Avg Tries',
+              svg: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+              colour: '#fb923c'
+            },
+            {
+              val: setsPct,
+              lbl: 'Sets %',
+              svg: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,
+              colour: parseInt(setsPct) >= 70 ? '#4ade80' : parseInt(setsPct) >= 50 ? '#facc15' : '#f87171'
+            }
+          ].map(s => `
+            <div style="background:rgba(255,255,255,.07);border-radius:10px;padding:10px 6px 8px;text-align:center;border:1px solid rgba(255,255,255,.08)">
+              <div style="color:${s.colour};margin-bottom:4px;display:flex;justify-content:center;opacity:.9">${s.svg}</div>
+              <div style="font-family:'Oswald',sans-serif;font-size:1.05rem;font-weight:700;color:white;line-height:1;letter-spacing:.02em">${s.val}</div>
+              <div style="font-size:.52rem;color:rgba(255,255,255,.45);margin-top:3px;text-transform:uppercase;letter-spacing:.08em;font-family:'Oswald',sans-serif">${s.lbl}</div>
+            </div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  // ── Match list — latest first ────────────────────
+  // Sort by date descending (most recent at top)
+  const sorted = [...ms].sort((a,b) => b.match_date.localeCompare(a.match_date));
+  const byY = {};
+  sorted.forEach((m,i) => {
+    const y = (m.match_date||'').slice(0,4)||'?';
+    (byY[y]||(byY[y]=[])).push({m, i: ms.indexOf(m)});
+  });
+
+  let h = '';
+  Object.keys(byY).sort((a,b)=>b-a).forEach(yr => {
+    h += `<div><span class="season-pill">📅 Season ${yr}</span></div>`;
+    byY[yr].forEach(({m,i}) => {
+      const t = totalsFromMatch(m);
+      // Result indicator colour
+      const isSherb = /sherburn|bears/i.test(m.home_team||'') || /sherburn|bears/i.test(m.away_team||'');
+      const isHome  = /sherburn|bears/i.test(m.home_team||'');
+      let resultColour = 'var(--border)';
+      if (m.score_home !== null && isSherb) {
+        const us   = isHome ? m.score_home : m.score_away;
+        const them = isHome ? m.score_away : m.score_home;
+        resultColour = us > them ? '#22c55e' : us < them ? '#ef4444' : '#f59e0b';
+      }
+      h += `<div class="hc" onclick="openDetail(${i})" style="border-left-color:${resultColour}">
+        <div class="hd">${fmtD(m.match_date)}${m.competition?' · '+m.competition:''}</div>
+        <div class="ht">${m.home_team} vs ${m.away_team}</div>
+        ${m.score_home!=null?`<div class="hscore">${m.score_home} – ${m.score_away}</div>`:''}
+        <div class="hs">🛡️${t.tackles} &nbsp;💥${t.hitups} &nbsp;🏆${t.tries} &nbsp;🤝${t.offloads} &nbsp;⭐${t.tryAssists}</div>
+        <div class="ha" onclick="event.stopPropagation()">
+          <button class="hb" onclick="quickEmail(${i})">✉️</button>
+          <button class="hb" onclick="quickCSVMatch(${i})">📊</button>
+          <button class="hb del" onclick="delMatch(event,${i})">✕</button>
+        </div>
+      </div>`;
+    });
+  });
+  el.innerHTML = h;
+}
+
+function totals(m) {
+  return (m.players||[]).reduce((a,p)=>{
+    a.tackles+=p.tackles||0;a.hitups+=p.hitups||0;a.tries+=p.tries||0;
+    a.offloads+=p.offloads||0;a.tryAssists+=p.tryAssists||0;return a;
+  },{tackles:0,hitups:0,tries:0,offloads:0,tryAssists:0});
+}
+function totalsFromMatch(m) {
+  const pl = m.match_players || [];
+  return pl.reduce((a,p)=>{
+    a.tackles+=p.tackles||0;a.hitups+=p.hitups||0;a.tries+=p.tries||0;
+    a.offloads+=p.offloads||0;a.tryAssists+=p.try_assists||0;return a;
+  },{tackles:0,hitups:0,tries:0,offloads:0,tryAssists:0});
+}
+
+async function delMatch(e, i) {
+  e.stopPropagation();
+  if (!confirm('Delete this match?')) return;
+  await sb.from('matches').delete().eq('id', matches[i].id);
+  showToast('Deleted');
+  renderHistoryScreen();
+}
+
+// ══════════════════════════════════════════════════════
+//  PLAYER NAME PSEUDONYMISATION
+//  Converts stored player names into GDPR-safe display
+//  format for squad, live tracking and awards screens.
+//  Storage remains untouched — coaches type full names
+//  when adding players (better UX), but only initials
+//  are ever displayed or exported.
+//
+//  "Noah Sharma"          →  "N.SH"
+//  "James Harrison-Smith" →  "J.HA"
+//  "Charlie"              →  "C"   (first name only)
+//
+//  This is pseudonymisation under GDPR Article 25 —
+//  the data cannot identify a child without prior
+//  knowledge of which shirt number they wear.
+// ══════════════════════════════════════════════════════
+function pseudoName(name) {
+  if (!name || !name.trim()) return '—';
+  const parts = name.trim().split(/\s+/);
+  const firstInitial = parts[0][0].toUpperCase();
+  if (parts.length === 1) return firstInitial;
+  // For the surname, strip anything after a hyphen so
+  // "Harrison-Smith" gives "HA" not "HA-SM"
+  const surname = parts[parts.length - 1].replace(/-.*/, '');
+  const surnameInitials = surname.slice(0, 2).toUpperCase();
+  return `${firstInitial}.${surnameInitials}`;
+}
+
+// Convenience wrapper — accepts both roster objects (display_name)
+// and active-match player objects (name) interchangeably.
+function playerLabel(p) {
+  return pseudoName(p.display_name || p.name || '');
+}
+
+// ══════════════════════════════════════════════════════
+//  AWARDS HISTORY
+// ══════════════════════════════════════════════════════
+async function renderAwards() {
+  const el = document.getElementById('awards-list');
+  el.innerHTML = '<div class="spinner"><div class="spin-ring"></div>Loading…</div>';
+  let ms = [];
+  try {
+    ms = await loadMatches();
+  } catch(e) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><p>Couldn\'t load awards.<br>Check your connection and try again.</p></div>';
+    return;
+  }
+  const aw = ms.map((m,i)=>({m,i})).filter(({m})=>{ const a=m.awards||{}; return a.opp||a.cch||a.par||a.magic; });
+  if (!aw.length) { el.innerHTML='<div class="empty"><div class="empty-icon">🏅</div><p>No awards recorded yet.<br>Awards are added during match tracking.</p></div>'; return; }
+  const byY={};
+  aw.forEach(({m,i})=>{ const y=(m.match_date||'').slice(0,4)||'?'; (byY[y]||(byY[y]=[])).push({m,i}); });
+  let h='';
+  Object.keys(byY).sort((a,b)=>b-a).forEach(yr=>{
+    h+=`<div><span class="season-pill">📅 Season ${yr}</span></div>`;
+    byY[yr].forEach(({m,i})=>{
+      const a=m.awards||{};
+      // Awards were stored as shirt numbers (from the updated dropdown).
+      // We look up the initials from match_players if available,
+      // otherwise just show the shirt number with a # prefix.
+      const plookup = {};
+      (m.match_players||[]).forEach(p => {
+        plookup[String(p.shirt_no)] = pseudoName(p.display_name);
+      });
+      const awardLabel = (val) => {
+        if (!val) return '';
+        const lbl = plookup[String(val)] || '';
+        return lbl ? `#${val} ${lbl}` : `#${val}`;
+      };
+      h+=`<div class="ahc" onclick="openDetail(${i})">
+        <div class="hd">${fmtD(m.match_date)}</div>
+        <div class="ht" style="margin-bottom:8px">${m.home_team} vs ${m.away_team}</div>
+        ${a.opp?`<div><span class="ap apo">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+          Opp POTM</span>${esc(awardLabel(a.opp))}</div>`:''}
+        ${a.cch?`<div style="margin-top:5px"><span class="ap apc">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Coaches POTM</span>${esc(awardLabel(a.cch))}</div>`:''}
+        ${a.par?`<div style="margin-top:5px"><span class="ap app">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Parents POTM</span>${esc(awardLabel(a.par))}</div>`:''}
+        ${a.magic?`<div style="margin-top:8px;padding:9px 11px;background:#d1fae5;border-radius:8px;border-left:3px solid #2d7a50"><span style="font-family:'Oswald',sans-serif;font-size:.6rem;text-transform:uppercase;letter-spacing:.1em;color:#065f46;display:block;margin-bottom:3px">★ Custom Award</span>${esc(a.magic)}</div>`:''}
+      </div>`;
+    });
+  });
+  el.innerHTML=h;
+}
+
+// ══════════════════════════════════════════════════════
+//  DETAIL VIEW + COACHING ACTIONS
+// ══════════════════════════════════════════════════════
+async function openDetail(i) {
+  const m = matches[i];
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('ds').classList.add('active');
+
+  const t = totalsFromMatch(m);
+  const pl = m.match_players || [];
+  const rows = pl.map(p=>`<tr>
+    <td><strong>${p.shirt_no}</strong> ${pseudoName(p.display_name)}</td>
+    <td class="${!p.tackles?'zero':''}">${p.tackles||0}</td>
+    <td class="${!p.hitups?'zero':''}">${p.hitups||0}</td>
+    <td class="${!p.tries?'zero':''}">${p.tries||0}</td>
+    <td class="${!p.offloads?'zero':''}">${p.offloads||0}</td>
+    <td class="${!p.try_assists?'zero':''}">${p.try_assists||0}</td>
+  </tr>`).join('');
+
+  const n=m.notes||{}, a=m.awards||{};
+  const setsTotal = (m.sets_complete||0)+(m.sets_incomplete||0);
+  const setsPct = setsTotal ? Math.round((m.sets_complete/setsTotal)*100)+'%' : '—';
+
+  // Coaching actions — check 7-day lock
+  const savedAt = new Date(m.created_at);
+  const now = new Date();
+  const daysSince = (now - savedAt) / (1000*60*60*24);
+  const locked = daysSince > 7 || !!m.coaching_actions_locked_at;
+  const ca = m.coaching_actions || {};
+
+  document.getElementById('dc').innerHTML=`
+    <div class="mbar" style="margin-bottom:14px">
+      <div style="padding-left:6px"><div class="ml">Match</div><div class="mv">${m.home_team} v ${m.away_team}</div></div>
+      <div style="text-align:right"><div class="ml">Score</div><div class="mv">${m.score_home??'—'} – ${m.score_away??'—'}</div></div>
+    </div>
+    <div style="font-size:.72rem;color:var(--grey-lt);text-align:center;margin:-6px 0 12px;font-family:'Oswald',sans-serif;letter-spacing:.06em">${fmtD(m.match_date)}${m.competition?' · '+m.competition:''}</div>
+    ${setsTotal?`<div class="card" style="background:var(--lt-blue);border-color:var(--blue)"><div style="display:flex;justify-content:space-between;align-items:center"><div><div class="card-ttl">Set Completion</div><div style="font-family:'Oswald',sans-serif;font-size:1.6rem;font-weight:700;color:var(--blue-dk)">${setsPct}</div></div><div style="font-size:.78rem;color:var(--grey)">${m.sets_complete} complete / ${m.sets_incomplete} incomplete</div></div></div>`:''}
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="st">
+        <thead><tr><th>Player</th><th>🛡️</th><th>💥</th><th>🏆</th><th>🤝</th><th>⭐</th></tr></thead>
+        <tbody>${rows}</tbody>
+        <tfoot><tr><td>TOTAL</td><td>${t.tackles}</td><td>${t.hitups}</td><td>${t.tries}</td><td>${t.offloads}</td><td>${t.tryAssists}</td></tr></tfoot>
+      </table>
+    </div>
+    ${n.note_defence||n.note_attack||n.note_general?`<div class="card"><div class="card-ttl">Coach Notes</div>
+      ${m.note_defence?`<div class="nb"><div class="nl">⚔️ Defence</div><p>${esc(m.note_defence)}</p></div>`:''}
+      ${m.note_attack?`<div class="nb"><div class="nl">⚡ Attack</div><p>${esc(m.note_attack)}</p></div>`:''}
+      ${m.note_general?`<div class="nb"><div class="nl">📝 General</div><p>${esc(m.note_general)}</p></div>`:''}
+    </div>`:''}
+    ${a.opp||a.cch||a.par||a.magic?`<div class="card"><div class="card-ttl">🏅 Match Awards</div>
+      ${a.opp?`<div class="nb" style="border-left-color:#1a5bb5"><div class="nl">🤝 Opposition POTM</div><p>${esc(a.opp)}</p></div>`:''}
+      ${a.cch?`<div class="nb" style="border-left-color:var(--red)"><div class="nl">📋 Coaches POTM</div><p>${esc(a.cch)}</p></div>`:''}
+      ${a.par?`<div class="nb" style="border-left-color:#c07000"><div class="nl">👪 Parents POTM</div><p>${esc(a.par)}</p></div>`:''}
+      ${a.magic?`<div class="nb" style="border-left-color:#2d7a50"><div class="nl">✨ Magic Moment</div><p>${esc(a.magic)}</p></div>`:''}
+    </div>`:''}
+
+    <!-- COACHING ACTIONS -->
+    ${locked
+      ? `<div class="ca-locked"><div class="card-ttl">🧠 Coaching Actions</div>
+          ${ca.went_well?`<div class="nb" style="border-left-color:var(--green)"><div class="nl">✅ What Went Well</div><p>${esc(ca.went_well)}</p></div>`:''}
+          ${ca.develop?`<div class="nb"><div class="nl">📈 Areas to Develop</div><p>${esc(ca.develop)}</p></div>`:''}
+          ${ca.priorities?`<div class="nb" style="border-left-color:var(--blue)"><div class="nl">🎯 Training Priorities</div><p>${esc(ca.priorities)}</p></div>`:''}
+          ${!ca.went_well&&!ca.develop&&!ca.priorities?`<div class="ca-locked-msg">No coaching actions were added for this match.</div>`:''}
+          <div class="ca-timer">🔒 Editing window closed (${Math.floor(daysSince)} days after match)</div>
+        </div>`
+      : `<div class="ca-block">
+          <div class="ca-title">🧠 Coaching Actions <span class="badge badge-amber" style="font-size:.6rem">${Math.ceil(7-daysSince)} days to edit</span></div>
+          <div class="field"><label>✅ What Went Well</label><textarea id="ca-went" style="min-height:60px" placeholder="Positives from today…">${esc(ca.went_well||'')}</textarea></div>
+          <div class="field"><label>📈 Areas to Develop</label><textarea id="ca-dev" style="min-height:60px" placeholder="What needs work…">${esc(ca.develop||'')}</textarea></div>
+          <div class="field"><label>🎯 Training Priorities</label><textarea id="ca-pri" style="min-height:60px" placeholder="Focus for next session…">${esc(ca.priorities||'')}</textarea></div>
+          <button class="btn btn-blue btn-sm" onclick="saveCoachingActions('${m.id}')">💾 Save Coaching Actions</button>
+        </div>`
+    }
+
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn btn-blue btn-sm" style="flex:1" onclick="quickEmail(${i})">✉️ Email</button>
+      <button class="btn btn-wht btn-sm" style="flex:1" onclick="quickCSVMatch(${i})">📊 CSV</button>
+    </div>`;
+}
+
+async function saveCoachingActions(matchId) {
+  // Check coaching action fields for profanity before saving
+  const caFields = ['ca-went','ca-dev','ca-pri'].map(id => document.getElementById(id)).filter(Boolean);
+  let caClean = true;
+  caFields.forEach(el => { if (!checkProfanity(el)) caClean = false; });
+  if (!caClean) { showToast('⚠️ Please remove inappropriate language before saving'); return; }
+
+  const actions = {
+    went_well: document.getElementById('ca-went')?.value.trim()||'',
+    develop:   document.getElementById('ca-dev')?.value.trim()||'',
+    priorities:document.getElementById('ca-pri')?.value.trim()||'',
+    saved_at:  new Date().toISOString()
+  };
+  const { error } = await sb.from('matches').update({ coaching_actions: actions }).eq('id', matchId);
+  if (error) { showToast('Save failed: ' + error.message); return; }
+  showToast('Coaching actions saved ✓');
+  // Refresh matches and re-open
+  const ms = await loadMatches();
+  const idx = ms.findIndex(m => m.id === matchId);
+  if (idx >= 0) openDetail(idx);
+}
+
+function closeDetail() {
+  document.getElementById('ds').classList.remove('active');
+  showTab('history');
+}
+
+// ══════════════════════════════════════════════════════
+//  EXPORT
+// ══════════════════════════════════════════════════════
+async function renderExport() {
+  await loadMatches();
+  // Build match options — first entry on CSV is "all season"
+  const matchOpts = matches.length
+    ? matches.map((m,i) => `<option value="${i}">${fmtD(m.match_date)} — ${m.home_team} v ${m.away_team}</option>`).join('')
+    : '<option disabled>No matches yet</option>';
+  const allOpt = matches.length ? `<option value="all">⬇ All matches (full season)</option>` : '';
+
+  document.getElementById('csv-sel').innerHTML    = allOpt + matchOpts;
+  document.getElementById('report-sel').innerHTML = matchOpts; // full report is always single-match
+  document.getElementById('email-sel').innerHTML  = matchOpts;
+}
+
+function downloadFullReport() {
+  const sel = document.getElementById('report-sel');
+  if (!sel.value && sel.value !== 0) { showToast('Select a match first'); return; }
+  const m    = matches[parseInt(sel.value)];
+  const slug = `${m.match_date}-${m.home_team.replace(/\s+/g,'-')}`;
+  dl(`rl-tracker-report-${slug}.txt`, 'text/plain', buildRpt(m));
+  showToast('Full report downloaded ✓');
+}
+
+function buildCSV(m) {
+  const pl = m.match_players||[];
+  return 'Shirt No,Player,Tackles,Hit Ups,Tries,Offloads,Try Assists\n' +
+    pl.map(p=>`${p.shirt_no},"${p.display_name}",${p.tackles||0},${p.hitups||0},${p.tries||0},${p.offloads||0},${p.try_assists||0}`).join('\n');
+}
+function buildAllCSV() {
+  return 'Date,Home,Away,Score,Shirt No,Player,Tackles,Hit Ups,Tries,Offloads,Try Assists\n' +
+    matches.flatMap(m=>(m.match_players||[]).map(p=>
+      `${m.match_date},"${m.home_team}","${m.away_team}","${m.score_home??0}-${m.score_away??0}",${p.shirt_no},"${p.display_name}",${p.tackles||0},${p.hitups||0},${p.tries||0},${p.offloads||0},${p.try_assists||0}`
+    )).join('\n');
+}
+// ─── Plain-text report builder ────────────────────────
+// Produces a complete human-readable match report including
+// player stats, notes, awards, sets and coaching actions.
+function buildRpt(m) {
+  const pl  = m.match_players || [];
+  const t   = totalsFromMatch(m);
+  const a   = m.awards || {};
+  const ca  = m.coaching_actions || {};
+  const D   = '─'.repeat(44);
+
+  // Sets completion line
+  const sTotal = (m.sets_complete||0) + (m.sets_incomplete||0);
+  const sPct   = sTotal ? Math.round((m.sets_complete/sTotal)*100) + '%' : null;
+  const sLine  = sPct
+    ? `Set Completion: ${sPct}  (${m.sets_complete} complete / ${m.sets_incomplete} incomplete)`
+    : null;
+
+  // Player rows — padded for alignment
+  const playerRows = pl.map(p =>
+    `  #${String(p.shirt_no).padEnd(3)} ${(p.display_name||'').padEnd(18)} ` +
+    `Tackles:${String(p.tackles||0).padStart(2)}  ` +
+    `Hit Ups:${String(p.hitups||0).padStart(2)}  ` +
+    `Tries:${String(p.tries||0).padStart(2)}  ` +
+    `Offloads:${String(p.offloads||0).padStart(2)}  ` +
+    `Try Assists:${String(p.try_assists||0).padStart(2)}`
+  ).join('\n');
+
+  const totalsLine =
+    `Tackles: ${t.tackles}  Hit Ups: ${t.hitups}  ` +
+    `Tries: ${t.tries}  Offloads: ${t.offloads}  Try Assists: ${t.tryAssists}`;
+
+  // Assemble sections — filter out empty ones cleanly
+  const sections = [
+    `RL TRACKER — MATCH REPORT`,
+    D,
+    `Date:         ${fmtD(m.match_date)}`,
+    m.competition ? `Competition:  ${m.competition}` : null,
+    `Result:       ${m.home_team} ${m.score_home??0} – ${m.score_away??0} ${m.away_team}`,
+    D,
+    `PLAYER STATS`,
+    ``,
+    playerRows,
+    ``,
+    D,
+    `TOTALS  ${totalsLine}`,
+    sLine ? D : null,
+    sLine,
+    D,
+    // Notes section
+    m.note_defence ? `DEFENCE\n${m.note_defence}` : null,
+    m.note_attack  ? `\nATTACK\n${m.note_attack}`  : null,
+    m.note_general ? `\nGENERAL\n${m.note_general}` : null,
+    (m.note_defence || m.note_attack || m.note_general) ? D : null,
+    // Awards section
+    (a.opp || a.cch || a.par || a.magic) ? `MATCH AWARDS` : null,
+    a.opp   ? `  Opposition POTM:  ${a.opp}`   : null,
+    a.cch   ? `  Coaches POTM:     ${a.cch}`   : null,
+    a.par   ? `  Parents POTM:     ${a.par}`   : null,
+    a.magic ? `\n  Magic Moment:\n  ${a.magic}` : null,
+    (a.opp || a.cch || a.par || a.magic) ? D : null,
+    // Coaching actions section
+    (ca.went_well || ca.develop || ca.priorities) ? `COACHING ACTIONS` : null,
+    ca.went_well   ? `  What Went Well:\n  ${ca.went_well}`    : null,
+    ca.develop     ? `\n  Areas to Develop:\n  ${ca.develop}`  : null,
+    ca.priorities  ? `\n  Training Priorities:\n  ${ca.priorities}` : null,
+    (ca.went_well || ca.develop || ca.priorities) ? D : null,
+    `Generated by Gainline · RL Tracker · ${new Date().toLocaleDateString('en-GB')}`,
+  ];
+
+  return sections.filter(s => s !== null).join('\n');
+}
+function downloadCSVSel() {
+  const sel = document.getElementById('csv-sel');
+  if (sel.value==='all') { dl('rl-tracker-season.csv','text/csv',buildAllCSV()); showToast('Season CSV downloaded ✓'); }
+  else { quickCSVMatch(parseInt(sel.value)); }
+}
+function quickCSVMatch(i) {
+  const m=matches[i]; const slug=`${m.match_date}-${m.home_team.replace(/\s+/g,'-')}`;
+  dl(`rl-tracker-${slug}.csv`,'text/csv',buildCSV(m)); showToast('CSV downloaded ✓');
+}
+function emailReport() {
+  const sel=document.getElementById('email-sel');
+  if (!sel.value&&sel.value!==0){showToast('Select a match first');return;}
+  prepEmail(parseInt(sel.value));
+}
+function quickEmail(i) { prepEmail(i); }
+function prepEmail(i) {
+  const m=matches[i]; emailTxt=buildRpt(m);
+  quickCSVMatch(i);
+  document.getElementById('email-subj').value=`RL Tracker Match Report — ${m.home_team} v ${m.away_team} (${fmtD(m.match_date)})`;
+  document.getElementById('email-to').value='';
+  document.getElementById('mo').classList.add('show');
+}
+function closeMo(){document.getElementById('mo').classList.remove('show');}
+function openMailto(){const to=document.getElementById('email-to').value.trim(),sub=encodeURIComponent(document.getElementById('email-subj').value),body=encodeURIComponent(emailTxt);window.location.href=`mailto:${to}?subject=${sub}&body=${body}`;}
+function copyRpt(){if(navigator.clipboard){navigator.clipboard.writeText(emailTxt).then(()=>{showToast('Copied ✓');closeMo();});}else{const ta=document.createElement('textarea');ta.value=emailTxt;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);showToast('Copied ✓');closeMo();}}
+function backupData(){dl('rl-tracker-backup.json','application/json',JSON.stringify({matches,roster},null,2));showToast('Backup downloaded ✓');}
+async function restoreBackup(input){
+  const file=input.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=async e=>{try{const d=JSON.parse(e.target.result);showToast('Backup loaded — restore via Supabase dashboard');console.log(d);}catch{showToast('Invalid backup file');}};
+  r.readAsText(file);input.value='';
+}
+
+// ══════════════════════════════════════════════════════
+//  INVITE SYSTEM
+// ══════════════════════════════════════════════════════
+// We store pending invites in a simple invite_tokens table.
+// Run this SQL first to create it:
+// create table if not exists invite_tokens (
+//   id uuid default gen_random_uuid() primary key,
+//   club_id uuid references clubs(id),
+//   email text not null,
+//   role text default 'coach',
+//   created_by uuid references auth.users(id),
+//   created_at timestamp with time zone default now(),
+//   used boolean default false
+// );
+
+async function generateInvite() {
+  const email = document.getElementById('invite-email').value.trim();
+  const role  = document.getElementById('invite-role').value;
+  if (!email) { showToast('Please enter an email address'); return; }
+
+  const { data, error } = await sb.from('invite_tokens').insert({
+    club_id:    currentProfile.club_id,
+    email:      email,
+    role:       role,
+    created_by: currentUser.id
+  }).select().single();
+
+  if (error) { showToast('Error: ' + error.message); return; }
+
+  const clubName = currentProfile.clubs?.name || 'our club';
+  const inviteUrl = `${window.location.origin}${window.location.pathname}?invite=${data.id}&email=${encodeURIComponent(email)}&role=${role}`;
+
+  // Store for share/copy
+  window._lastInviteUrl = inviteUrl;
+  window._lastInviteMsg = `Hi! You've been invited to join ${clubName} on Gainline RL — the rugby league coaching app.\n\nClick the link below to set up your account:\n${inviteUrl}\n\nSee you on the pitch! 🏉`;
+
+  document.getElementById('invite-link').textContent = inviteUrl;
+  document.getElementById('invite-result').style.display = 'block';
+  showToast('Invite link generated ✓');
+}
+
+function copyInviteLink() {
+  const msg = window._lastInviteMsg || window._lastInviteUrl || '';
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(msg).then(() => showToast('Copied ✓'));
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = msg; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    showToast('Copied ✓');
+  }
+}
+
+function shareInviteLink() {
+  const msg = window._lastInviteMsg || window._lastInviteUrl || '';
+  if (navigator.share) {
+    navigator.share({ title: 'RL Tracker Invite', text: msg })
+      .catch(() => copyInviteLink());
+  } else {
+    // Fallback — open WhatsApp web with the message pre-filled
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+  }
+}
+
+// Check URL for invite token on page load
+async function checkInviteToken() {
+  const params = new URLSearchParams(window.location.search);
+  const token  = params.get('invite');
+  const email  = params.get('email');
+  const role   = params.get('role');
+  if (!token) return false; // no invite — let boot decide which screen to show
+
+  const { data, error } = await sb.from('invite_tokens')
+    .select('*, clubs(name)')
+    .eq('id', token)
+    .eq('used', false)
+    .single();
+
+  if (error || !data) {
+    // Invalid/used token — show login with message
+    showAuthScreen('login-screen');
+    const errEl = document.getElementById('login-err');
+    if (errEl) {
+      errEl.textContent = 'This invite link has expired or already been used. Please contact your club admin.';
+      errEl.style.display = 'block';
+    }
+    return true; // still handled — don't show default login
+  }
+
+  // Valid invite — show register screen
+  showAuthScreen('register-screen');
+
+  // Pre-fill fields
+  if (email) document.getElementById('reg-email').value = decodeURIComponent(email);
+  if (role)  document.getElementById('reg-role').value  = role;
+
+  const clubName = data.clubs?.name || '';
+  if (clubName) {
+    document.getElementById('reg-club').value = clubName;
+    // Lock the club name field — it's set by the invite
+    const clubInput = document.getElementById('reg-club');
+    clubInput.readOnly = true;
+    clubInput.style.background = '#f0f0f0';
+    clubInput.style.color = '#666';
+  }
+
+  // Show welcome banner above the form
+  const card = document.querySelector('#register-screen .auth-card');
+  if (card && !document.getElementById('invite-banner')) {
+    const banner = document.createElement('div');
+    banner.id = 'invite-banner';
+    banner.style.cssText = 'background:var(--lt-blue);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 13px;margin-bottom:16px;font-size:.84rem;color:var(--blue-dk);line-height:1.5;border-left:4px solid var(--blue)';
+    banner.innerHTML = `🏉 <strong>You've been invited to join ${esc(clubName)}!</strong><br><span style="font-size:.76rem;color:var(--grey)">Fill in your name and set a password. The club admin will approve your account — you'll be notified once you're in.</span>`;
+    card.insertBefore(banner, card.firstChild);
+  }
+
+  // Update the button text to be clearer
+  const regBtn = document.querySelector('#register-screen .btn-blue');
+  if (regBtn) regBtn.textContent = 'Create Account & Join Club →';
+
+  // Store token for after registration
+  sessionStorage.setItem('pendingInviteToken',  token);
+  sessionStorage.setItem('pendingInviteClubId', data.club_id);
+  sessionStorage.setItem('pendingInviteRole',   data.role);
+
+  // Clean URL without reloading page
+  window.history.replaceState({}, '', window.location.pathname);
+
+  return true; // handled — boot should not show login screen
+}
+
+// Called after successful registration to process a pending invite.
+// Sets club_id and role automatically (so the admin can see which club
+// this person belongs to) but keeps approved=false so admin still
+// controls who gets in.
+async function processInvite(userId) {
+  const token  = sessionStorage.getItem('pendingInviteToken');
+  const clubId = sessionStorage.getItem('pendingInviteClubId');
+  const role   = sessionStorage.getItem('pendingInviteRole') || 'coach';
+  if (!token || !clubId) return;
+
+  const { error } = await sb.from('profiles')
+    .update({
+      club_id:  clubId,
+      role:     role,
+      approved: false  // admin must still approve — but club is already linked
+    })
+    .eq('id', userId);
+
+  if (error) {
+    console.error('processInvite failed:', error.message);
+  } else {
+    // Mark token as used so the link can't be reused
+    await sb.from('invite_tokens').update({ used: true }).eq('id', token);
+  }
+
+  sessionStorage.removeItem('pendingInviteToken');
+  sessionStorage.removeItem('pendingInviteClubId');
+  sessionStorage.removeItem('pendingInviteRole');
+}
+// ══════════════════════════════════════════════════════
+//  CLUB HUB
+// ══════════════════════════════════════════════════════
+async function renderHub() {
+  const { data } = await sb.from('hub_links').select('*').eq('club_id', currentProfile.club_id).order('created_at');
+  const el = document.getElementById('hub-links-list');
+  if (!data?.length) {
+    el.innerHTML='<div class="empty"><div class="empty-icon">🔗</div><p>No links added yet.<br>Add fixture pages, league tables, etc.</p></div>';
+  } else {
+    el.innerHTML = data.map(l=>`
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <a class="hub-link" href="${esc(l.url)}" target="_blank" rel="noopener" style="flex:1">
+          <span class="hub-icon">🔗</span>
+          <span class="hub-label">${esc(l.label)}</span>
+          <span class="hub-arrow">↗</span>
+        </a>
+        <button onclick="deleteHubLink('${l.id}')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:1rem;padding:8px">✕</button>
+      </div>`).join('');
+  }
+  renderHubDocs();
+  renderHubMembers();
+}
+
+async function renderHubDocs() {
+  const el = document.getElementById('hub-docs-list');
+  if (!el) return;
+  const { data, error } = await sb.storage
+    .from('club-docs')
+    .list(`${currentProfile.club_id}/`, { sortBy: { column: 'created_at', order: 'desc' } });
+  if (error || !data?.length) { el.innerHTML = ''; return; }
+  const files = data.filter(f => f.name !== '.emptyFolderPlaceholder');
+  if (!files.length) { el.innerHTML = ''; return; }
+  el.innerHTML = `<div class="card" style="margin-top:0">
+    <div class="card-ttl">Uploaded Documents</div>
+    ${files.map(f => {
+      const { data: urlData } = sb.storage.from('club-docs').getPublicUrl(`${currentProfile.club_id}/${f.name}`);
+      const ext  = f.name.split('.').pop().toUpperCase();
+      const icon = ext==='PDF'?'📄':['XLSX','XLS'].includes(ext)?'📊':['DOCX','DOC'].includes(ext)?'📝':'📎';
+      const displayName = decodeURIComponent(f.name.replace(/^\d+_/, '').replace(/\.[^.]+$/, ''));
+      const size = f.metadata?.size ? `${(f.metadata.size/1024).toFixed(0)} KB` : '';
+      return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:1.3rem">${icon}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:.88rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(displayName)}</div>
+          <div style="font-size:.7rem;color:var(--grey-lt)">${ext}${size?' · '+size:''}</div>
+        </div>
+        <a href="${urlData.publicUrl}" target="_blank" rel="noopener"
+           style="background:var(--blue);color:white;border-radius:6px;padding:5px 10px;font-family:'Oswald',sans-serif;font-size:.7rem;font-weight:600;text-decoration:none;flex-shrink:0">Open</a>
+        <button onclick="deleteDoc('${f.name}')"
+           style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:.9rem;padding:4px;flex-shrink:0">✕</button>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+async function uploadDoc() {
+  const nameEl = document.getElementById('doc-name');
+  const fileEl = document.getElementById('doc-file');
+  const prog   = document.getElementById('doc-upload-progress');
+  const name   = nameEl.value.trim();
+  const file   = fileEl.files[0];
+  if (!name) { showToast('Please enter a document name'); return; }
+  if (!file) { showToast('Please choose a file'); return; }
+  if (file.size > 10 * 1024 * 1024) { showToast('File too large — maximum 10MB'); return; }
+  if (isProfane(name)) { showToast('⚠️ Document name contains inappropriate language'); return; }
+  prog.style.display = 'block';
+  const ext      = file.name.split('.').pop();
+  const safeName = `${Date.now()}_${encodeURIComponent(name)}.${ext}`;
+  const path     = `${currentProfile.club_id}/${safeName}`;
+  const { error } = await sb.storage.from('club-docs').upload(path, file, { upsert: false });
+  prog.style.display = 'none';
+  if (error) { showToast('Upload failed: ' + error.message); return; }
+  nameEl.value = '';
+  fileEl.value = '';
+  showToast('Document uploaded ✓');
+  renderHubDocs();
+}
+
+async function deleteDoc(filename) {
+  if (!confirm('Delete this document?')) return;
+  const { error } = await sb.storage.from('club-docs').remove([`${currentProfile.club_id}/${filename}`]);
+  if (error) { showToast('Delete failed: ' + error.message); return; }
+  showToast('Deleted ✓');
+  renderHubDocs();
+}
+
+async function renderHubMembers() {
+  const el = document.getElementById('hub-members-list');
+  if (!el) return;
+  el.innerHTML = '<div class="spinner"><div class="spin-ring"></div>Loading…</div>';
+
+  const { data, error } = await sb
+    .from('profiles')
+    .select('id, email, full_name, role, approved, created_at')
+    .eq('club_id', currentProfile.club_id)
+    .order('created_at');
+
+  if (error) {
+    el.innerHTML = '<p style="font-size:.84rem;color:var(--red)">Couldn\'t load members — try refreshing.</p>';
+    return;
+  }
+  if (!data?.length) {
+    el.innerHTML = '<p style="font-size:.84rem;color:var(--grey-lt)">No members yet.</p>';
+    return;
+  }
+
+  const isCoachOrAdmin = ['coach','admin'].includes(currentProfile.role) || currentUser.email === ADMIN_EMAIL;
+
+  el.innerHTML = data.map(m => {
+    const isMe = m.id === currentUser.id;
+    const roleColour = m.role==='admin' ? 'badge-red' : m.role==='coach' ? 'badge-blue' : 'badge-amber';
+    const statusBadge = m.approved
+      ? '<span class="badge badge-green">Active</span>'
+      : '<span class="badge badge-amber">Pending</span>';
+
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div style="width:36px;height:36px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Oswald',sans-serif;font-weight:700;color:white;font-size:.9rem">
+        ${(m.full_name||m.email||'?')[0].toUpperCase()}
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.9rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+          ${esc(m.full_name||'—')} ${isMe?'<span class="badge badge-blue" style="font-size:.56rem">You</span>':''}
+        </div>
+        <div style="font-size:.72rem;color:var(--grey-lt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(m.email)}</div>
+        <div style="margin-top:3px;display:flex;gap:4px;align-items:center">
+          ${statusBadge}
+          <span class="badge ${roleColour}">${m.role||'guest'}</span>
+        </div>
+      </div>
+      ${isCoachOrAdmin && !isMe ? `
+      <div style="position:relative;flex-shrink:0">
+        <select onchange="changeMemberRole('${m.id}', this.value)"
+          style="padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;font-family:'Oswald',sans-serif;font-size:.7rem;background:var(--off);cursor:pointer;-webkit-appearance:none;padding-right:20px">
+          <option value="coach" ${m.role==='coach'?'selected':''}>Coach</option>
+          <option value="guest" ${m.role==='guest'?'selected':''}>Guest</option>
+          <option value="admin" ${m.role==='admin'?'selected':''}>Admin</option>
+        </select>
+        <span style="position:absolute;right:6px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--grey);font-size:.65rem">▾</span>
+      </div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+async function updateMemberRole(userId, newRole) {
+  const { error } = await sb.from('profiles')
+    .update({ role: newRole })
+    .eq('id', userId);
+  if (error) { showToast('Update failed: ' + error.message); return; }
+  showToast(`Role updated to ${newRole} ✓`);
+  renderHubMembers();
+}
+async function addHubLink() {
+  const labelEl = document.getElementById('hub-label');
+  const label   = labelEl.value.trim();
+  const url     = document.getElementById('hub-url').value.trim();
+  if (!label||!url) { showToast('Please enter a label and URL'); return; }
+  // Check hub link label for profanity
+  if (!checkProfanity(labelEl, '⚠️ Link labels cannot contain inappropriate language')) return;
+  const { error } = await sb.from('hub_links').insert({ club_id: currentProfile.club_id, label, url });
+  if (error) { showToast('Error: '+error.message); return; }
+  document.getElementById('hub-label').value='';
+  document.getElementById('hub-url').value='';
+  renderHub();
+  showToast('Link added ✓');
+}
+async function deleteHubLink(id) {
+  await sb.from('hub_links').delete().eq('id', id);
+  renderHub();
+}
+
+// ══════════════════════════════════════════════════════
+//  ROSTER
+// ══════════════════════════════════════════════════════
+function renderRoster() {
+  document.getElementById('roster-list').innerHTML = roster.map((p,i)=>`
+    <div class="rr">
+      <div class="ni-badge" onclick="editShirtNo(${i})" title="Tap to change number"><span>${p.shirt_no}</span></div>
+      <!-- Display the pseudonymised label (e.g. N.SH) as a read-only badge,
+           then the editable full name field below it for the coach's reference.
+           The badge is what gets shown in tracking and awards. -->
+      <div style="flex:1;min-width:0">
+        <div style="font-family:'Oswald',sans-serif;font-size:.72rem;font-weight:700;color:var(--blue);letter-spacing:.06em;margin-bottom:2px">${pseudoName(p.display_name)}</div>
+        <input class="nmi" type="text" value="${p.display_name}" placeholder="First name + surname"
+          oninput="roster[${i}].display_name=this.value;checkPlayerName(this);this.previousElementSibling.textContent=pseudoName(this.value)"
+          onblur="checkProfanity(this,'⚠️ Player names cannot contain inappropriate language')">
+      </div>
+      <button class="del-p" onclick="removePlayer(${i})">✕</button>
+    </div>`).join('');
+}
+function editShirtNo(i) {
+  const val = prompt(`Change shirt number for ${roster[i].display_name}:`, roster[i].shirt_no);
+  if (!val) return;
+  const n = parseInt(val);
+  if (!n||n<1||n>99) { showToast('Enter 1–99'); return; }
+  roster[i].shirt_no = n;
+  renderRoster();
+}
+async function removePlayer(i) {
+  if (!confirm(`Remove ${roster[i].display_name}?`)) return;
+  if (roster[i].id) await sb.from('players').delete().eq('id', roster[i].id);
+  roster.splice(i,1);
+  renderRoster();
+}
+async function addPlayer() {
+  roster.push({ id: null, club_id: currentProfile.club_id, shirt_no: roster.length+1, display_name: '' });
+  renderRoster();
+  document.getElementById('screen-roster').scrollTop = 9999;
+}
+async function saveRoster() {
+  const toUpdate = roster.filter(p => p.id);
+  const toInsert = roster.filter(p => !p.id);
+  for (const p of toUpdate) {
+    await sb.from('players').update({ shirt_no: p.shirt_no, display_name: p.display_name }).eq('id', p.id);
+  }
+  if (toInsert.length) {
+    const rows = toInsert.map(p => ({ club_id: currentProfile.club_id, shirt_no: p.shirt_no, display_name: p.display_name }));
+    const { data } = await sb.from('players').insert(rows).select();
+    if (data) data.forEach((d,i) => { const idx = roster.findIndex(r=>!r.id&&r.display_name===d.display_name); if(idx>=0) roster[idx].id=d.id; });
+  }
+  showToast('Roster saved ✓');
+}
+
+// ══════════════════════════════════════════════════════
+//  ADMIN
+// ══════════════════════════════════════════════════════
+async function renderAdmin() {
+  renderAdminMembers();
+}
+
+async function renderAdminMembers() {
+  const el = document.getElementById('admin-members-list');
+  if (!el) return;
+  el.innerHTML = '<div class="spinner"><div class="spin-ring"></div>Loading…</div>';
+
+  const { data, error } = await sb
+    .from('profiles')
+    .select('id, email, full_name, role, approved, club_id')
+    .eq('club_id', currentProfile.club_id)
+    .order('created_at');
+
+  if (error) { el.innerHTML=`<p style="color:var(--red);font-size:.84rem">Error: ${error.message}</p>`; return; }
+
+  const active  = (data||[]).filter(u =>  u.approved);
+  const pending = (data||[]).filter(u => !u.approved);
+  const rc = {admin:'badge-red', coach:'badge-blue', guest:'badge-amber'};
+  let html = '';
+
+  // Pending approvals — shown with amber highlight and approve/reject buttons
+  if (pending.length > 0) {
+    html += `<div style="font-family:'Oswald',sans-serif;font-size:.62rem;text-transform:uppercase;letter-spacing:.12em;color:var(--red);margin-bottom:8px">
+      ${pending.length} awaiting your approval
+    </div>`;
+    pending.forEach(u => {
+      const init = (u.full_name||u.email||'?')[0].toUpperCase();
+      html += `<div style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:var(--r-sm);background:var(--amber-lt);border:1px solid #fbbf24;margin-bottom:8px">
+        <div style="width:36px;height:36px;border-radius:50%;background:#92400e;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Oswald',sans-serif;font-weight:700;color:white;font-size:.9rem">${init}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:.88rem;font-weight:600;color:#92400e">${esc(u.full_name||'No name yet')}</div>
+          <div style="font-size:.72rem;color:#92400e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(u.email)}</div>
+          <div style="margin-top:3px;display:flex;gap:4px;flex-wrap:wrap">
+            <span class="badge ${rc[u.role]||'badge-blue'}" style="font-size:.58rem">${u.role||'coach'}</span>
+            <span class="badge badge-green" style="font-size:.58rem">Club linked ✓</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0">
+          <button onclick="approveUser('${u.id}')"
+            style="background:#166534;color:white;border:none;border-radius:6px;padding:6px 12px;font-family:'Oswald',sans-serif;font-size:.72rem;font-weight:700;cursor:pointer">
+            ✓ Approve
+          </button>
+          <button onclick="rejectUser('${u.id}')"
+            style="background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;border-radius:6px;padding:4px 12px;font-family:'Oswald',sans-serif;font-size:.68rem;font-weight:600;cursor:pointer">
+            ✕ Reject
+          </button>
+        </div>
+      </div>`;
+    });
+    html += `<div style="height:6px"></div>`;
+  }
+
+  // Active members — with role change and remove controls
+  if (active.length > 0) {
+    html += `<div style="font-family:'Oswald',sans-serif;font-size:.62rem;text-transform:uppercase;letter-spacing:.12em;color:var(--grey-lt);margin-bottom:8px">${active.length} active member${active.length!==1?'s':''}</div>`;
+    active.forEach(u => {
+      const isMe = u.id === currentUser.id;
+      const init = (u.full_name||u.email||'?')[0].toUpperCase();
+      html += `<div style="display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--border)">
+        <div style="width:36px;height:36px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Oswald',sans-serif;font-weight:700;color:white;font-size:.9rem">${init}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:.88rem;font-weight:600">${esc(u.full_name||'—')} ${isMe?'<span class="badge badge-blue" style="font-size:.55rem">You</span>':''}</div>
+          <div style="font-size:.72rem;color:var(--grey-lt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(u.email)}</div>
+          <span class="badge ${rc[u.role]||'badge-blue'}" style="margin-top:3px;display:inline-block">${u.role||'coach'}</span>
+        </div>
+        ${!isMe ? `<div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end">
+          <div style="position:relative">
+            <select onchange="changeMemberRole('${u.id}',this.value)"
+              style="padding:5px 22px 5px 8px;border:1.5px solid var(--border);border-radius:6px;font-family:'Oswald',sans-serif;font-size:.7rem;background:var(--off);-webkit-appearance:none;cursor:pointer">
+              <option value="coach" ${u.role==='coach'?'selected':''}>Coach</option>
+              <option value="guest" ${u.role==='guest'?'selected':''}>Guest</option>
+              <option value="admin" ${u.role==='admin'?'selected':''}>Admin</option>
+            </select>
+            <span style="position:absolute;right:5px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--grey);font-size:.6rem">▾</span>
+          </div>
+          <button onclick="removeMember('${u.id}','${esc(u.email)}')"
+            style="font-size:.65rem;color:#b91c1c;background:#fee2e2;border:1px solid #fca5a5;border-radius:5px;padding:3px 8px;cursor:pointer;font-family:'Oswald',sans-serif;font-weight:600">Remove</button>
+        </div>` : ''}
+      </div>`;
+    });
+  }
+
+  if (!active.length && !pending.length) {
+    html = '<p style="font-size:.84rem;color:var(--grey-lt)">No members yet — use Invite below.</p>';
+  }
+
+  el.innerHTML = html;
+}
+
+async function approveUser(id) {
+  // Set approved=true and ensure club_id is set — covers both invite and manual registration paths
+  const { error } = await sb.from('profiles')
+    .update({ approved: true, club_id: currentProfile.club_id })
+    .eq('id', id);
+  if (error) { showToast('Approval failed: ' + error.message); return; }
+  showToast('User approved ✓');
+  renderAdminMembers();
+}
+
+async function rejectUser(id) {
+  if (!confirm('Reject and remove this account request?')) return;
+  await sb.from('profiles').delete().eq('id', id);
+  showToast('Request rejected');
+  renderAdminMembers();
+}
+
+async function changeMemberRole(userId, newRole) {
+  const { error } = await sb.from('profiles').update({ role: newRole }).eq('id', userId);
+  if (error) { showToast('Update failed: ' + error.message); return; }
+  showToast(`Role updated to ${newRole} ✓`);
+  renderAdminMembers();
+  renderHubMembers();
+}
+
+async function removeMember(userId, email) {
+  if (!confirm(`Remove ${email} from your club?`)) return;
+  const { error } = await sb.from('profiles')
+    .update({ approved: false, club_id: null })
+    .eq('id', userId);
+  if (error) { showToast('Remove failed: ' + error.message); return; }
+  showToast('Member removed');
+  renderAdminMembers();
+}
+
+// ══════════════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════════════
+function sendContactMessage() {
+  const msg = document.getElementById('contact-msg')?.value.trim();
+  if (!msg) { showToast('Please enter a message'); return; }
+  if (isProfane(msg)) { showToast('⚠️ Please remove inappropriate language'); return; }
+
+  const name    = currentProfile?.full_name || 'Unknown';
+  const email   = currentUser?.email || 'Unknown';
+  const club    = currentProfile?.clubs?.name || 'Unknown';
+  const role    = currentProfile?.role || 'Unknown';
+  const subject = encodeURIComponent(`RL Tracker Support — ${name} (${club})`);
+  const body    = encodeURIComponent(
+    `From: ${name}\nEmail: ${email}\nClub: ${club}\nRole: ${role}\n\n---\n\n${msg}`
+  );
+
+  window.location.href = `mailto:thebl.masri@gmail.com?subject=${subject}&body=${body}`;
+  document.getElementById('contact-msg').value = '';
+  showToast('Opening your email app… ✓');
+}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
+function dl(name,type,content){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
+
+document.getElementById('mo').addEventListener('click',function(e){if(e.target===this)closeMo();});
+document.getElementById('co').addEventListener('click',function(e){if(e.target===this)closeCo();});
+
+// Boot
+boot();
+</script>
+</body>
+</html>
