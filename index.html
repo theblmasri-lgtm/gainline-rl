@@ -536,7 +536,7 @@ nav button.active svg{stroke:var(--white)}
       <svg viewBox="0 0 500 70" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
         <!-- Pitch outline -->
         <rect x="30" y="6" width="440" height="58" rx="2" fill="none" stroke="white" stroke-width="1.2"/>
-        <!-- Try lines (20m in from each end) -->
+        <!-- Try lines -->
         <line x1="72"  y1="6"  x2="72"  y2="64" stroke="white" stroke-width="1"/>
         <line x1="428" y1="6"  x2="428" y2="64" stroke="white" stroke-width="1"/>
         <!-- 40m lines -->
@@ -547,17 +547,12 @@ nav button.active svg{stroke:var(--white)}
         <line x1="290" y1="6"  x2="290" y2="64" stroke="white" stroke-width=".6" stroke-dasharray="3,4"/>
         <!-- Halfway -->
         <line x1="250" y1="6"  x2="250" y2="64" stroke="white" stroke-width="1"/>
-        <!-- Distance numbers — NRL style, stencilled on pitch -->
-        <!-- 20m left -->
-        <text x="72"  y="42" font-family="Arial,sans-serif" font-weight="900" font-size="14" fill="rgba(255,255,255,0.2)" text-anchor="middle" letter-spacing="-1">20</text>
-        <!-- 40m left -->
-        <text x="148" y="42" font-family="Arial,sans-serif" font-weight="900" font-size="14" fill="rgba(255,255,255,0.15)" text-anchor="middle" letter-spacing="-1">40</text>
-        <!-- halfway -->
-        <text x="250" y="42" font-family="Arial,sans-serif" font-weight="900" font-size="11" fill="rgba(255,255,255,0.12)" text-anchor="middle" letter-spacing="-1">50</text>
-        <!-- 40m right -->
-        <text x="352" y="42" font-family="Arial,sans-serif" font-weight="900" font-size="14" fill="rgba(255,255,255,0.15)" text-anchor="middle" letter-spacing="-1">40</text>
-        <!-- 20m right -->
-        <text x="428" y="42" font-family="Arial,sans-serif" font-weight="900" font-size="14" fill="rgba(255,255,255,0.2)" text-anchor="middle" letter-spacing="-1">20</text>
+        <!-- Distance numbers — NRL style, clearly visible -->
+        <text x="72"  y="44" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="15" fill="rgba(255,255,255,0.45)" text-anchor="middle" letter-spacing="-1">20</text>
+        <text x="148" y="44" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="15" fill="rgba(255,255,255,0.32)" text-anchor="middle" letter-spacing="-1">40</text>
+        <text x="250" y="44" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="13" fill="rgba(255,255,255,0.22)" text-anchor="middle" letter-spacing="-1">50</text>
+        <text x="352" y="44" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="15" fill="rgba(255,255,255,0.32)" text-anchor="middle" letter-spacing="-1">40</text>
+        <text x="428" y="44" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="15" fill="rgba(255,255,255,0.45)" text-anchor="middle" letter-spacing="-1">20</text>
       </svg>
     </div>
     <div class="hdr-v-out"></div>
@@ -1063,8 +1058,35 @@ nav button.active svg{stroke:var(--white)}
 <script>
 'use strict';
 // ══════════════════════════════════════════════════════
-//  SUPABASE INIT
+//  UTILITY FUNCTIONS
 // ══════════════════════════════════════════════════════
+
+// Format a YYYY-MM-DD date string as DD/MM/YYYY
+function fmtD(d) {
+  if (!d) return '—';
+  const [y, m, dy] = d.split('-');
+  return `${dy}/${m}/${y}`;
+}
+
+// Escape HTML special characters to prevent XSS
+function esc(s) {
+  if (!s) return '';
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+// Show a toast notification
+function showToast(msg, duration = 2800) {
+  const t = document.getElementById('toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
 const SUPA_URL  = 'https://sarkzbhsnthlvvjelayt.supabase.co';
 const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNhcmt6YmhzbnRobHZ2amVsYXl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3Mzk2NzksImV4cCI6MjA5MzMxNTY3OX0.qMMf1nOOh2N2jEezPxXoC9V31Fu_YUpAWH8xQalXYqk';
 const ADMIN_EMAIL = 'thebl.masri@gmail.com';
@@ -3096,8 +3118,6 @@ function sendContactMessage() {
   document.getElementById('contact-msg').value = '';
   showToast('Opening your email app… ✓');
 }
-function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
 function dl(name,type,content){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
 
 document.getElementById('mo').addEventListener('click',function(e){if(e.target===this)closeMo();});
