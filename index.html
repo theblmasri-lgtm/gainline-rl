@@ -411,8 +411,10 @@ nav button.active svg{stroke:var(--white)}
 .empty p{font-size:.88rem;line-height:1.6}
 
 /* ── TOOLTIPS ─────────────────────────────────── */
-.tip-icon{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:var(--blue);color:white;font-size:.58rem;cursor:pointer;font-style:normal;flex-shrink:0;user-select:none;vertical-align:middle;margin-left:4px}
-.tip-icon.tip-light{background:rgba(255,255,255,.3);color:white}
+.tip-icon{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;cursor:pointer;flex-shrink:0;user-select:none;vertical-align:middle;margin-left:4px;opacity:.55;transition:opacity var(--tr)}
+.tip-icon:hover{opacity:1}
+.tip-icon svg{display:block}
+.tip-icon.tip-light{opacity:.7}
 .tip-box{display:none;background:var(--lt-blue);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 12px;margin-top:4px;margin-bottom:8px;font-size:.78rem;color:var(--text);line-height:1.55}
 .tip-box.tip-dark{background:rgba(0,0,0,.3);border-color:rgba(255,255,255,.15);color:rgba(255,255,255,.85)}
 .tip-box.show{display:block}
@@ -478,7 +480,7 @@ nav button.active svg{stroke:var(--white)}
       <div class="auth-field">
         <label style="display:flex;align-items:center;gap:6px">
           I am a…
-          <span class="role-tip-icon" onclick="toggleRoleInfo()" title="What's the difference?">ⓘ</span>
+          <span class="role-tip-icon" onclick="toggleRoleInfo()" title="What's the difference?"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="8.5"/><line x1="12" y1="12" x2="12" y2="16"/></svg></span>
         </label>
         <div class="role-tip-box" id="role-info">
           <div class="role-tip-row">
@@ -532,23 +534,30 @@ nav button.active svg{stroke:var(--white)}
   <header>
     <div class="hdr-pitch">
       <svg viewBox="0 0 500 70" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+        <!-- Pitch outline -->
         <rect x="30" y="6" width="440" height="58" rx="2" fill="none" stroke="white" stroke-width="1.2"/>
-        <line x1="72" y1="6" x2="72" y2="64" stroke="white" stroke-width="1"/>
-        <line x1="428" y1="6" x2="428" y2="64" stroke="white" stroke-width="1"/>
-        <line x1="148" y1="6" x2="148" y2="64" stroke="white" stroke-width=".8"/>
-        <line x1="352" y1="6" x2="352" y2="64" stroke="white" stroke-width=".8"/>
-        <line x1="210" y1="6" x2="210" y2="64" stroke="white" stroke-width=".6" stroke-dasharray="3,4"/>
-        <line x1="290" y1="6" x2="290" y2="64" stroke="white" stroke-width=".6" stroke-dasharray="3,4"/>
-        <line x1="250" y1="6" x2="250" y2="64" stroke="white" stroke-width="1"/>
-        <line x1="244" y1="6" x2="244" y2="20" stroke="white" stroke-width="1.2"/>
-        <line x1="256" y1="6" x2="256" y2="20" stroke="white" stroke-width="1.2"/>
-        <line x1="238" y1="20" x2="262" y2="20" stroke="white" stroke-width="1.2"/>
-        <line x1="56" y1="6" x2="56" y2="20" stroke="white" stroke-width="1.2"/>
-        <line x1="68" y1="6" x2="68" y2="20" stroke="white" stroke-width="1.2"/>
-        <line x1="50" y1="20" x2="74" y2="20" stroke="white" stroke-width="1.2"/>
-        <line x1="432" y1="6" x2="432" y2="20" stroke="white" stroke-width="1.2"/>
-        <line x1="444" y1="6" x2="444" y2="20" stroke="white" stroke-width="1.2"/>
-        <line x1="426" y1="20" x2="450" y2="20" stroke="white" stroke-width="1.2"/>
+        <!-- Try lines (20m in from each end) -->
+        <line x1="72"  y1="6"  x2="72"  y2="64" stroke="white" stroke-width="1"/>
+        <line x1="428" y1="6"  x2="428" y2="64" stroke="white" stroke-width="1"/>
+        <!-- 40m lines -->
+        <line x1="148" y1="6"  x2="148" y2="64" stroke="white" stroke-width=".8"/>
+        <line x1="352" y1="6"  x2="352" y2="64" stroke="white" stroke-width=".8"/>
+        <!-- 10m dashed lines (unique to rugby league) -->
+        <line x1="210" y1="6"  x2="210" y2="64" stroke="white" stroke-width=".6" stroke-dasharray="3,4"/>
+        <line x1="290" y1="6"  x2="290" y2="64" stroke="white" stroke-width=".6" stroke-dasharray="3,4"/>
+        <!-- Halfway -->
+        <line x1="250" y1="6"  x2="250" y2="64" stroke="white" stroke-width="1"/>
+        <!-- Distance numbers — NRL style, stencilled on pitch -->
+        <!-- 20m left -->
+        <text x="72"  y="42" font-family="Arial,sans-serif" font-weight="900" font-size="14" fill="rgba(255,255,255,0.2)" text-anchor="middle" letter-spacing="-1">20</text>
+        <!-- 40m left -->
+        <text x="148" y="42" font-family="Arial,sans-serif" font-weight="900" font-size="14" fill="rgba(255,255,255,0.15)" text-anchor="middle" letter-spacing="-1">40</text>
+        <!-- halfway -->
+        <text x="250" y="42" font-family="Arial,sans-serif" font-weight="900" font-size="11" fill="rgba(255,255,255,0.12)" text-anchor="middle" letter-spacing="-1">50</text>
+        <!-- 40m right -->
+        <text x="352" y="42" font-family="Arial,sans-serif" font-weight="900" font-size="14" fill="rgba(255,255,255,0.15)" text-anchor="middle" letter-spacing="-1">40</text>
+        <!-- 20m right -->
+        <text x="428" y="42" font-family="Arial,sans-serif" font-weight="900" font-size="14" fill="rgba(255,255,255,0.2)" text-anchor="middle" letter-spacing="-1">20</text>
       </svg>
     </div>
     <div class="hdr-v-out"></div>
@@ -664,7 +673,7 @@ nav button.active svg{stroke:var(--white)}
           <div class="ferr">Please select a date</div>
         </div>
         <div class="field" id="f-home">
-          <label>Home Team <span class="tip-icon" onclick="toggleTip('tip-home')">ⓘ</span></label>
+          <label>Home Team <span class="tip-icon" onclick="toggleTip('tip-home')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="8.5"/><line x1="12" y1="12" x2="12" y2="16"/></svg></span></label>
           <div class="tip-box" id="tip-home">Start typing your club name and it will appear as a suggestion.</div>
           <input type="text" id="home-team" list="club-suggestions" autocomplete="off" oninput="checkName(this,'home-warn')">
           <div class="name-warn" id="home-warn">⚠️ This looks like a full name — use a team name only for privacy.</div>
@@ -677,7 +686,7 @@ nav button.active svg{stroke:var(--white)}
           <div class="ferr">Please enter the away team</div>
         </div>
         <div class="field" id="f-comp">
-          <label>Competition <span class="tip-icon" onclick="toggleTip('tip-comp')">ⓘ</span></label>
+          <label>Competition <span class="tip-icon" onclick="toggleTip('tip-comp')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="8.5"/><line x1="12" y1="12" x2="12" y2="16"/></svg></span></label>
           <div class="tip-box" id="tip-comp">e.g. "League", "Cup", "Friendly". Appears on reports and history.</div>
           <input type="text" id="match-comp" placeholder="e.g. League / Cup / Friendly" list="comp-suggestions">
           <datalist id="comp-suggestions">
@@ -690,7 +699,7 @@ nav button.active svg{stroke:var(--white)}
 
     <!-- SQUAD SELECTION -->
     <div class="card">
-      <div class="card-ttl">Who is playing today? <span class="tip-icon" onclick="toggleTip('tip-squad')">ⓘ</span></div>
+      <div class="card-ttl">Who is playing today? <span class="tip-icon" onclick="toggleTip('tip-squad')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="8.5"/><line x1="12" y1="12" x2="12" y2="16"/></svg></span></div>
       <div class="tip-box" id="tip-squad" style="margin-bottom:10px">Toggle players on (blue) for today. Players toggled off won't appear on the tracking screen.</div>
       <div id="squad-list"><div class="spinner"><div class="spin-ring"></div>Loading squad…</div></div>
       <div id="squad-err" style="display:none;font-size:.75rem;color:var(--red);margin-top:8px;font-weight:500;">⚠ Select at least one player</div>
@@ -724,7 +733,7 @@ nav button.active svg{stroke:var(--white)}
         </div>
       </div>
       <div class="sets-bar">
-        <span class="sets-label">Sets <span class="tip-icon tip-light" onclick="toggleTip('tip-sets')">ⓘ</span></span>
+        <span class="sets-label">Sets <span class="tip-icon tip-light" onclick="toggleTip('tip-sets')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="8.5"/><line x1="12" y1="12" x2="12" y2="16"/></svg></span></span>
         <div class="tip-box tip-dark" id="tip-sets" style="width:100%;margin-bottom:6px">A <strong>Complete Set</strong> is all 6 tackles retained without losing possession. An <strong>Incomplete Set</strong> is when possession is lost before the 6th tackle (knock on, forward pass, held up etc.)</div>
         <div class="sets-btns">
           <button class="set-btn complete" onclick="addSet('complete')">✓ Complete</button>
@@ -833,7 +842,7 @@ nav button.active svg{stroke:var(--white)}
         <input type="date" id="fx-date">
       </div>
       <div class="field">
-        <label>Home Team <span class="tip-icon" onclick="toggleTip('tip-fx-home')">ⓘ</span></label>
+        <label>Home Team <span class="tip-icon" onclick="toggleTip('tip-fx-home')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="8.5"/><line x1="12" y1="12" x2="12" y2="16"/></svg></span></label>
         <div class="tip-box" id="tip-fx-home">Your club name will appear as a suggestion as you type. Type freely for opposition team names.</div>
         <input type="text" id="fx-home" list="club-suggestions" autocomplete="off">
       </div>
@@ -913,7 +922,7 @@ nav button.active svg{stroke:var(--white)}
     <div class="card">
       <div class="v-hdr">Add Link</div>
       <div class="field">
-        <label>Label <span class="tip-icon" onclick="toggleTip('tip-hub')">ⓘ</span></label>
+        <label>Label <span class="tip-icon" onclick="toggleTip('tip-hub')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="8.5"/><line x1="12" y1="12" x2="12" y2="16"/></svg></span></label>
         <div class="tip-box" id="tip-hub">Add links to your league table, fixtures page, club website, RFL resources etc. These open in your browser.</div>
         <input type="text" id="hub-label" placeholder="e.g. League Table">
       </div>
@@ -2229,14 +2238,18 @@ async function delMatch(e, i) {
 // ══════════════════════════════════════════════════════
 function pseudoName(name) {
   if (!name || !name.trim()) return '—';
-  const parts = name.trim().split(/\s+/);
-  const firstInitial = parts[0][0].toUpperCase();
-  if (parts.length === 1) return firstInitial;
-  // For the surname, strip anything after a hyphen so
-  // "Harrison-Smith" gives "HA" not "HA-SM"
+  // Players now store initials directly (e.g. "N.SH", "J.HA", "C")
+  // so we just return the stored value uppercased and trimmed.
+  // The old logic (auto-generating initials from full names) is kept
+  // as a fallback for any existing records that stored full names.
+  const v = name.trim();
+  if (v.length <= 5) return v.toUpperCase(); // already initials format
+  // Fallback: auto-generate from full name for legacy records
+  const parts = v.split(/\s+/);
+  const first = parts[0][0].toUpperCase();
+  if (parts.length === 1) return first;
   const surname = parts[parts.length - 1].replace(/-.*/, '');
-  const surnameInitials = surname.slice(0, 2).toUpperCase();
-  return `${firstInitial}.${surnameInitials}`;
+  return `${first}.${surname.slice(0, 2).toUpperCase()}`;
 }
 
 // Convenience wrapper — accepts both roster objects (display_name)
@@ -2880,17 +2893,22 @@ async function deleteHubLink(id) {
 //  ROSTER
 // ══════════════════════════════════════════════════════
 function renderRoster() {
-  document.getElementById('roster-list').innerHTML = roster.map((p,i)=>`
+  const listEl = document.getElementById('roster-list');
+  // Guidance message at top
+  const guide = `<div style="background:var(--lt-blue);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 13px;margin-bottom:12px;font-size:.79rem;color:var(--grey);line-height:1.6;border-left:3px solid var(--blue)">
+    <strong style="color:var(--blue-dk);font-family:'Oswald',sans-serif;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase">Player Format</strong><br>
+    Enter initials only — max 4 characters. Use the format <strong>N.SH</strong> (first initial, dot, first 2 letters of surname). Examples: <strong>N.SH</strong> for Noah Sharma, <strong>J.HA</strong> for James Harrison, <strong>C</strong> for Charlie (no surname needed).
+  </div>`;
+
+  listEl.innerHTML = guide + roster.map((p,i)=>`
     <div class="rr">
       <div class="ni-badge" onclick="editShirtNo(${i})" title="Tap to change number"><span>${p.shirt_no}</span></div>
-      <!-- Display the pseudonymised label (e.g. N.SH) as a read-only badge,
-           then the editable full name field below it for the coach's reference.
-           The badge is what gets shown in tracking and awards. -->
       <div style="flex:1;min-width:0">
-        <div style="font-family:'Oswald',sans-serif;font-size:.72rem;font-weight:700;color:var(--blue);letter-spacing:.06em;margin-bottom:2px">${pseudoName(p.display_name)}</div>
-        <input class="nmi" type="text" value="${p.display_name}" placeholder="First name + surname"
-          oninput="roster[${i}].display_name=this.value;checkPlayerName(this);this.previousElementSibling.textContent=pseudoName(this.value)"
-          onblur="checkProfanity(this,'⚠️ Player names cannot contain inappropriate language')">
+        <input class="nmi" type="text" value="${esc(p.display_name)}"
+          placeholder="e.g. N.SH"
+          maxlength="4"
+          oninput="roster[${i}].display_name=this.value.toUpperCase().slice(0,4)"
+          onblur="checkProfanity(this,'⚠️ Invalid content in player label')">
       </div>
       <button class="del-p" onclick="removePlayer(${i})">✕</button>
     </div>`).join('');
