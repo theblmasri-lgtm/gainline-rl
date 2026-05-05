@@ -6,6 +6,12 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Gainline RL">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a1a45">
+<!-- Prevents iOS from auto-detecting phone numbers in stats -->
+<meta name="format-detection" content="telephone=no">
 <title>Gainline RL — Rugby League Coaching</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Oswald:wght@400;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -42,7 +48,21 @@ a,button,input,select,textarea,label{pointer-events:auto;cursor:pointer}
 input,textarea{cursor:text}
 
 /* ── APP SHELL ──────────────────────────────── */
-#app{display:flex;flex-direction:column;height:100vh;max-width:500px;margin:0 auto;position:relative}
+/* height: 100dvh uses the "dynamic viewport height" unit which
+   correctly accounts for iOS Safari's bottom bar and the home
+   indicator on iPhones. Without this, the nav bar gets pushed
+   off screen in standalone (home screen) mode.
+   Fall back to 100vh for browsers that don't support dvh. */
+#app{
+  display:flex;
+  flex-direction:column;
+  height:100vh;          /* fallback */
+  height:100dvh;         /* modern browsers — handles iOS keyboard/toolbar */
+  max-width:500px;
+  margin:0 auto;
+  position:relative;
+  overflow:hidden;       /* prevent the whole shell from scrolling */
+}
 
 /* ── AUTH SCREENS ───────────────────────────── */
 .auth-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;background:linear-gradient(160deg,var(--blue-dp) 0%,var(--blue-dk) 50%,#1a0a2e 100%);position:relative;overflow:hidden;cursor:default}
@@ -309,8 +329,23 @@ nav button.active svg{stroke:var(--white)}
 .hb.del:active{background:#fee2e2}
 
 /* ── DETAIL ──────────────────────────────────── */
-#ds{display:none;flex:1;overflow-y:auto;padding:14px 14px 24px}
-#ds.active{display:block;background:var(--off)}
+/* The detail screen overlays the whole app as a fixed panel.
+   Using position:fixed means it sits on top of everything without
+   disrupting the flex layout of #app — this prevents the white
+   space and nav-jumping-to-top bug on iPhone home screen apps. */
+#ds{
+  display:none;
+  position:fixed;
+  inset:0;                      /* covers the full screen */
+  max-width:500px;              /* matches #app max-width */
+  margin:0 auto;                /* centres on wider screens */
+  background:var(--off);
+  overflow-y:auto;
+  padding:14px 14px 90px;       /* bottom padding for nav bar */
+  z-index:40;                   /* above screens, below modals */
+  -webkit-overflow-scrolling:touch; /* smooth momentum scrolling on iOS */
+}
+#ds.active{display:block}
 .st{width:100%;border-collapse:collapse;font-size:.8rem}
 .st th{background:var(--blue-dk);color:var(--white);padding:8px 5px;text-align:center;font-family:'Oswald',sans-serif;font-weight:600;font-size:.7rem;letter-spacing:.06em}
 .st th:first-child{text-align:left;padding-left:10px}
@@ -1308,21 +1343,34 @@ async function boot() {
   const { data: { session } } = await sb.auth.getSession();
 
   if (session?.user) {
-    // Already logged in — load profile normally
     currentUser = session.user;
     await loadProfile();
   } else {
-    // Not logged in — check for invite token first
+    // Check for invite token before showing any auth screen.
+    // checkInviteToken() returns true if it handled the URL
+    // (valid invite → register screen, expired invite → login screen).
     const hasInvite = await checkInviteToken();
-    // checkInviteToken returns true if it found a valid token and showed register screen
-    // Only show login screen if there's no invite handling it
     if (!hasInvite) {
       showAuthScreen('login-screen');
     }
   }
 
-  // Listen for auth state changes (login, logout, registration)
+  // Listen for auth state changes, but use a flag to prevent the
+  // initial SIGNED_OUT event from overwriting an invite redirect.
+  // Supabase fires onAuthStateChange once immediately on page load
+  // with event='INITIAL_SESSION' — we must ignore SIGNED_OUT during
+  // that first fire if an invite is already being shown.
+  let initialFired = false;
   sb.auth.onAuthStateChange(async (event, session) => {
+    if (!initialFired) {
+      initialFired = true;
+      // On first fire: if register screen is already showing
+      // (because of a valid invite), don't let SIGNED_OUT overwrite it.
+      if (event === 'INITIAL_SESSION' || event === 'SIGNED_OUT') {
+        const registerVisible = document.getElementById('register-screen')?.style.display !== 'none';
+        if (registerVisible) return; // invite already handled — leave it alone
+      }
+    }
     if (session?.user) {
       currentUser = session.user;
       await loadProfile();
