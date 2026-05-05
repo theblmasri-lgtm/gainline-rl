@@ -333,24 +333,24 @@ nav button.active svg{stroke:var(--white)}
    Using position:fixed means it sits on top of everything without
    disrupting the flex layout of #app — this prevents the white
    space and nav-jumping-to-top bug on iPhone home screen apps. */
+/* ── DETAIL SCREEN ───────────────────────────────
+   Uses order:-1 to visually appear between header
+   and nav without being between them in the DOM.
+   When inactive: display none (takes no space).
+   When active: flex child filling available height,
+   scrollable, sitting above the screens layer.
+   This approach works correctly in iOS standalone
+   (home screen) mode without position:fixed issues. */
 #ds{
   display:none;
-  position:fixed;
-  top:0;
-  left:0;
-  right:0;
-  bottom:0;
-  /* Centre within the 500px app shell on wider screens */
-  max-width:500px;
-  margin-left:auto;
-  margin-right:auto;
-  background:var(--off);
+  order:-1;
+  flex:1;
   overflow-y:auto;
-  padding:14px 14px 90px;
-  z-index:40;
+  padding:14px 14px 24px;
+  background:var(--off);
   -webkit-overflow-scrolling:touch;
 }
-#ds.active{display:block}
+#ds.active{display:flex;flex-direction:column}
 .st{width:100%;border-collapse:collapse;font-size:.8rem}
 .st th{background:var(--blue-dk);color:var(--white);padding:8px 5px;text-align:center;font-family:'Oswald',sans-serif;font-weight:600;font-size:.7rem;letter-spacing:.06em}
 .st th:first-child{text-align:left;padding-left:10px}
@@ -681,6 +681,13 @@ nav button.active svg{stroke:var(--white)}
       Admin
     </button>
   </nav>
+  <!-- DETAIL SCREEN — sits in flex flow between nav and screens,
+       acts as a full-height flex child that covers content when active -->
+  <div id="ds">
+    <button class="btn btn-wht btn-sm" style="margin-bottom:14px" onclick="closeDetail()">← Back</button>
+    <div id="dc"></div>
+    <div style="height:24px"></div>
+  </div>
 
   <!-- HOME -->
   <div class="screen active" id="screen-home">
@@ -1047,11 +1054,7 @@ nav button.active svg{stroke:var(--white)}
   </div>
 
   <!-- DETAIL -->
-  <div id="ds">
-    <button class="btn btn-wht btn-sm" style="margin-bottom:14px" onclick="closeDetail()">← Back</button>
-    <div id="dc"></div>
-    <div style="height:24px"></div>
-  </div>
+
 
 </div><!-- /app -->
 
