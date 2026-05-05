@@ -336,14 +336,19 @@ nav button.active svg{stroke:var(--white)}
 #ds{
   display:none;
   position:fixed;
-  inset:0;                      /* covers the full screen */
-  max-width:500px;              /* matches #app max-width */
-  margin:0 auto;                /* centres on wider screens */
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
+  /* Centre within the 500px app shell on wider screens */
+  max-width:500px;
+  margin-left:auto;
+  margin-right:auto;
   background:var(--off);
   overflow-y:auto;
-  padding:14px 14px 90px;       /* bottom padding for nav bar */
-  z-index:40;                   /* above screens, below modals */
-  -webkit-overflow-scrolling:touch; /* smooth momentum scrolling on iOS */
+  padding:14px 14px 90px;
+  z-index:40;
+  -webkit-overflow-scrolling:touch;
 }
 #ds.active{display:block}
 .st{width:100%;border-collapse:collapse;font-size:.8rem}
@@ -2107,12 +2112,30 @@ function fixtureCard(f, isPast) {
 function trackFromFixture(fxId) {
   const fx = fixtures.find(f => f.id === fxId);
   if (!fx) return;
-  document.getElementById('fixture-picker').value = fxId;
-  document.getElementById('match-date').value = fx.match_date;
-  document.getElementById('home-team').value  = fx.home_team;
-  document.getElementById('away-team').value  = fx.away_team;
-  document.getElementById('match-comp').value = fx.competition||'';
-  showTab('home');
+
+  // Open the manual setup section so fields are visible
+  const setupBody  = document.getElementById('match-setup-body');
+  const setupLabel = document.getElementById('setup-toggle-label');
+  if (setupBody)  setupBody.style.display  = 'block';
+  if (setupLabel) setupLabel.textContent   = '− Set Up Match Manually';
+
+  // Populate form fields — use setTimeout so the DOM is
+  // visible before we write to it (avoids null on hidden inputs)
+  setTimeout(() => {
+    const di = document.getElementById('match-date');
+    const ht = document.getElementById('home-team');
+    const at = document.getElementById('away-team');
+    const ct = document.getElementById('match-comp');
+    const fp = document.getElementById('fixture-picker');
+    if (di) di.value = fx.match_date;
+    if (ht) ht.value = fx.home_team;
+    if (at) at.value = fx.away_team;
+    if (ct) ct.value = fx.competition || '';
+    if (fp) fp.value = fxId;
+    // Scroll to the squad section so coach can see it
+    const squadCard = document.getElementById('squad-list');
+    if (squadCard) squadCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 50);
 }
 
 async function deleteFixture(id) {
@@ -2878,6 +2901,10 @@ async function deleteDoc(filename) {
 async function renderHubMembers() {
   const el = document.getElementById('hub-members-list');
   if (!el) return;
+  if (!currentProfile?.club_id) {
+    el.innerHTML = '<p style="font-size:.84rem;color:var(--grey-lt)">No club linked to your account.</p>';
+    return;
+  }
   el.innerHTML = '<div class="spinner"><div class="spin-ring"></div>Loading…</div>';
 
   const { data, error } = await sb
@@ -2887,7 +2914,8 @@ async function renderHubMembers() {
     .order('created_at');
 
   if (error) {
-    el.innerHTML = '<p style="font-size:.84rem;color:var(--red)">Couldn\'t load members — try refreshing.</p>';
+    console.error('renderHubMembers error:', error.message, error.code);
+    el.innerHTML = '<p style="font-size:.84rem;color:var(--red)">Could not load members — try refreshing.</p>';
     return;
   }
   if (!data?.length) {
@@ -3026,6 +3054,10 @@ async function renderAdmin() {
 async function renderAdminMembers() {
   const el = document.getElementById('admin-members-list');
   if (!el) return;
+  if (!currentProfile?.club_id) {
+    el.innerHTML = '<p style="font-size:.84rem;color:var(--grey-lt)">No club linked to your account.</p>';
+    return;
+  }
   el.innerHTML = '<div class="spinner"><div class="spin-ring"></div>Loading…</div>';
 
   const { data, error } = await sb
