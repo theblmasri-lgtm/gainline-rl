@@ -48,20 +48,27 @@ a,button,input,select,textarea,label{pointer-events:auto;cursor:pointer}
 input,textarea{cursor:text}
 
 /* ── APP SHELL ──────────────────────────────── */
-/* height: 100dvh uses the "dynamic viewport height" unit which
-   correctly accounts for iOS Safari's bottom bar and the home
-   indicator on iPhones. Without this, the nav bar gets pushed
-   off screen in standalone (home screen) mode.
-   Fall back to 100vh for browsers that don't support dvh. */
 #app{
   display:flex;
   flex-direction:column;
-  height:100vh;          /* fallback */
-  height:100dvh;         /* modern browsers — handles iOS keyboard/toolbar */
+  height:100vh;
+  height:100dvh;
   max-width:500px;
   margin:0 auto;
   position:relative;
-  overflow:hidden;       /* prevent the whole shell from scrolling */
+  overflow:hidden;
+}
+/* Persistent pitch-line background on every screen.
+   Using ::before on #app means it renders behind all content
+   on every tab — zero per-screen declarations needed.
+   z-index:-1 sends it behind all children. */
+#app::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:transparent;
+  z-index:-1;
+  pointer-events:none;
 }
 
 /* ── AUTH SCREENS ───────────────────────────── */
@@ -193,10 +200,10 @@ nav button.active{color:var(--white);font-weight:600}
 nav button.active svg{stroke:var(--white)}
 
 /* ── SCREENS — extra bottom padding for tab bar ── */
-.screen{display:none;flex:1;overflow-y:auto;padding:14px 14px 90px;position:relative;background:var(--off) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='400' viewBox='0 0 500 400'%3E%3Cline x1='0' y1='60' x2='500' y2='60' stroke='%231a3c8f' stroke-width='1.5' opacity='.4'/%3E%3Cline x1='0' y1='140' x2='500' y2='140' stroke='%231a3c8f' stroke-width='1' opacity='.25'/%3E%3Cline x1='0' y1='200' x2='500' y2='200' stroke='%231a3c8f' stroke-width='1.5' opacity='.3'/%3E%3Cline x1='0' y1='260' x2='500' y2='260' stroke='%231a3c8f' stroke-width='1' opacity='.25'/%3E%3Cline x1='0' y1='340' x2='500' y2='340' stroke='%231a3c8f' stroke-width='1.5' opacity='.4'/%3E%3Cline x1='0' y1='170' x2='500' y2='170' stroke='%231a3c8f' stroke-width='.6' stroke-dasharray='6,8' opacity='.18'/%3E%3Cline x1='0' y1='230' x2='500' y2='230' stroke='%231a3c8f' stroke-width='.6' stroke-dasharray='6,8' opacity='.18'/%3E%3C/svg%3E") repeat-y center top/500px auto}
+.screen{display:none;flex:1;overflow-y:auto;padding:14px 14px 90px;position:relative;background:transparent;background:var(--off) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='400' viewBox='0 0 500 400'%3E%3Cline x1='0' y1='60' x2='500' y2='60' stroke='%231a3c8f' stroke-width='1.5' opacity='.4'/%3E%3Cline x1='0' y1='140' x2='500' y2='140' stroke='%231a3c8f' stroke-width='1' opacity='.25'/%3E%3Cline x1='0' y1='200' x2='500' y2='200' stroke='%231a3c8f' stroke-width='1.5' opacity='.3'/%3E%3Cline x1='0' y1='260' x2='500' y2='260' stroke='%231a3c8f' stroke-width='1' opacity='.25'/%3E%3Cline x1='0' y1='340' x2='500' y2='340' stroke='%231a3c8f' stroke-width='1.5' opacity='.4'/%3E%3Cline x1='0' y1='170' x2='500' y2='170' stroke='%231a3c8f' stroke-width='.6' stroke-dasharray='6,8' opacity='.18'/%3E%3Cline x1='0' y1='230' x2='500' y2='230' stroke='%231a3c8f' stroke-width='.6' stroke-dasharray='6,8' opacity='.18'/%3E%3C/svg%3E") repeat-y center top/500px auto}
 .screen.active{display:block}
-#screen-home{background:var(--off) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='400' viewBox='0 0 500 400'%3E%3Cline x1='0' y1='60' x2='500' y2='60' stroke='%231a3c8f' stroke-width='1.5' opacity='.4'/%3E%3Cline x1='0' y1='140' x2='500' y2='140' stroke='%231a3c8f' stroke-width='1' opacity='.25'/%3E%3Cline x1='0' y1='200' x2='500' y2='200' stroke='%231a3c8f' stroke-width='1.5' opacity='.3'/%3E%3Cline x1='0' y1='260' x2='500' y2='260' stroke='%231a3c8f' stroke-width='1' opacity='.25'/%3E%3Cline x1='0' y1='340' x2='500' y2='340' stroke='%231a3c8f' stroke-width='1.5' opacity='.4'/%3E%3Cline x1='0' y1='170' x2='500' y2='170' stroke='%231a3c8f' stroke-width='.6' stroke-dasharray='6,8' opacity='.18'/%3E%3Cline x1='0' y1='230' x2='500' y2='230' stroke='%231a3c8f' stroke-width='.6' stroke-dasharray='6,8' opacity='.18'/%3E%3C/svg%3E") repeat-y center top/500px auto}
-#screen-history{background:var(--off) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='400' viewBox='0 0 500 400'%3E%3Cline x1='0' y1='60' x2='500' y2='60' stroke='%231a3c8f' stroke-width='1.5' opacity='.4'/%3E%3Cline x1='0' y1='140' x2='500' y2='140' stroke='%231a3c8f' stroke-width='1' opacity='.25'/%3E%3Cline x1='0' y1='200' x2='500' y2='200' stroke='%231a3c8f' stroke-width='1.5' opacity='.3'/%3E%3Cline x1='0' y1='260' x2='500' y2='260' stroke='%231a3c8f' stroke-width='1' opacity='.25'/%3E%3Cline x1='0' y1='340' x2='500' y2='340' stroke='%231a3c8f' stroke-width='1.5' opacity='.4'/%3E%3Cline x1='0' y1='170' x2='500' y2='170' stroke='%231a3c8f' stroke-width='.6' stroke-dasharray='6,8' opacity='.18'/%3E%3Cline x1='0' y1='230' x2='500' y2='230' stroke='%231a3c8f' stroke-width='.6' stroke-dasharray='6,8' opacity='.18'/%3E%3C/svg%3E") repeat-y center top/500px auto}
+#screen-home{background:transparent}
+#screen-history{background:transparent}
 #screen-awards,#screen-export,#screen-roster,#screen-fixtures,#screen-hub,#screen-admin,#screen-match{background:var(--off)}
 
 /* ── SECTION HEADER ─────────────────────────── */
@@ -379,7 +386,7 @@ nav button.active svg{stroke:var(--white)}
   flex:1;
   overflow-y:auto;
   padding:14px 14px 24px;
-  background:var(--off) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='400' viewBox='0 0 500 400'%3E%3Cline x1='0' y1='60' x2='500' y2='60' stroke='%231a3c8f' stroke-width='1.5' opacity='.4'/%3E%3Cline x1='0' y1='140' x2='500' y2='140' stroke='%231a3c8f' stroke-width='1' opacity='.25'/%3E%3Cline x1='0' y1='200' x2='500' y2='200' stroke='%231a3c8f' stroke-width='1.5' opacity='.3'/%3E%3Cline x1='0' y1='260' x2='500' y2='260' stroke='%231a3c8f' stroke-width='1' opacity='.25'/%3E%3Cline x1='0' y1='340' x2='500' y2='340' stroke='%231a3c8f' stroke-width='1.5' opacity='.4'/%3E%3Cline x1='0' y1='170' x2='500' y2='170' stroke='%231a3c8f' stroke-width='.6' stroke-dasharray='6,8' opacity='.18'/%3E%3Cline x1='0' y1='230' x2='500' y2='230' stroke='%231a3c8f' stroke-width='.6' stroke-dasharray='6,8' opacity='.18'/%3E%3C/svg%3E") repeat-y center top/500px auto;
+  background:transparent;
   -webkit-overflow-scrolling:touch;
 }
 #ds.active{display:flex;flex-direction:column}
@@ -750,13 +757,13 @@ nav button.active svg{stroke:var(--white)}
           <label>Home Team <span class="tip-icon" onclick="toggleTip('tip-home')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="8.5"/><line x1="12" y1="12" x2="12" y2="16"/></svg></span></label>
           <div class="tip-box" id="tip-home">Start typing your club name and it will appear as a suggestion.</div>
           <input type="text" id="home-team" list="club-suggestions" autocomplete="off" oninput="checkName(this,'home-warn')">
-          <div class="name-warn" id="home-warn">⚠️ This looks like a full name — use a team name only for privacy.</div>
+          
           <div class="ferr">Please enter the home team</div>
         </div>
         <div class="field" id="f-away">
           <label>Away Team</label>
           <input type="text" id="away-team" list="club-suggestions" autocomplete="off" oninput="checkName(this,'away-warn')">
-          <div class="name-warn" id="away-warn">⚠️ This looks like a full name — use a team name only for privacy.</div>
+          
           <div class="ferr">Please enter the away team</div>
         </div>
         <div class="field" id="f-comp">
@@ -1217,7 +1224,10 @@ function restoreBackup() {
     const { active: saved_active } = JSON.parse(raw);
     active = saved_active;
     document.getElementById('recovery-banner')?.remove();
+    // showTab alone doesn't re-render the live screen —
+    // we must call renderMatch() explicitly after restoring
     showTab('match');
+    renderMatch();
     showToast('Match restored ✓ Continue tracking');
   } catch(e) {
     showToast('Could not restore — data may be corrupted');
@@ -1959,11 +1969,8 @@ function startMatch() {
   const playing = roster.map((_,i)=>i).filter(i => document.getElementById('tog-'+i)?.classList.contains('on'));
   document.getElementById('squad-err').style.display = playing.length ? 'none' : 'block';
   if (!date||!home||!away||!playing.length) { showToast('Please fill in all required fields'); return; }
-  // Check for personal names in team name fields (soft warning only, don't block)
-  if (looksLikeFullName(home)||looksLikeFullName(away)) {
-    showToast('⚠️ Tip: Use team names rather than personal names');
-    // Don't block — just warn
-  }
+  // Note: personal name check removed from team name fields
+  // — it incorrectly flagged legitimate team names like "Birstall Victoria"
   const fxSel = document.getElementById('fixture-picker');
   active = {
     fixture_id: fxSel?.value || null,
@@ -2285,14 +2292,14 @@ function trackFromFixture(fxId) {
   const fx = fixtures.find(f => f.id === fxId);
   if (!fx) return;
 
-  // Open the manual setup section so fields are visible
+  // Ensure setup section is open so DOM inputs exist
   const setupBody  = document.getElementById('match-setup-body');
   const setupLabel = document.getElementById('setup-toggle-label');
   if (setupBody)  setupBody.style.display  = 'block';
   if (setupLabel) setupLabel.textContent   = '− Set Up Match Manually';
 
-  // Populate form fields — use setTimeout so the DOM is
-  // visible before we write to it (avoids null on hidden inputs)
+  // Populate fields, then call startTracking() automatically
+  // so the coach goes straight to the live screen
   setTimeout(() => {
     const di = document.getElementById('match-date');
     const ht = document.getElementById('home-team');
@@ -2304,10 +2311,10 @@ function trackFromFixture(fxId) {
     if (at) at.value = fx.away_team;
     if (ct) ct.value = fx.competition || '';
     if (fp) fp.value = fxId;
-    // Scroll to the squad section so coach can see it
-    const squadCard = document.getElementById('squad-list');
-    if (squadCard) squadCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, 50);
+    // All fields set — toggle all squad players on and start
+    // (startTracking will validate and go to live screen)
+    startTracking();
+  }, 80);
 }
 
 async function deleteFixture(id) {
