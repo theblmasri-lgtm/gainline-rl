@@ -1133,6 +1133,106 @@ nav button.active svg{stroke:var(--white)}
 <script>
 'use strict';
 // ══════════════════════════════════════════════════════
+//  MATCHDAY BACKUP SYSTEM
+//  Saves active match to localStorage after every stat tap.
+//  Survives browser crashes, phone restarts, Safari reloads.
+//  On page load, if a backup exists it offers to restore.
+//  Key: 'gl_active_backup' — prefixed to avoid clashes.
+// ══════════════════════════════════════════════════════
+const BACKUP_KEY = 'gl_active_backup';
+
+function saveBackup() {
+  if (!active) return;
+  try {
+    localStorage.setItem(BACKUP_KEY, JSON.stringify({
+      saved: new Date().toISOString(),
+      active
+    }));
+  } catch(e) {
+    // localStorage full or unavailable — non-fatal, just log
+    console.warn('Backup failed:', e.message);
+  }
+}
+
+function clearBackup() {
+  try { localStorage.removeItem(BACKUP_KEY); } catch(e) {}
+}
+
+function checkForBackup() {
+  try {
+    const raw = localStorage.getItem(BACKUP_KEY);
+    if (!raw) return;
+    const { saved, active: saved_active } = JSON.parse(raw);
+    if (!saved_active || !saved_active.players?.length) {
+      clearBackup(); return;
+    }
+    // Calculate how long ago the backup was saved
+    const mins = Math.round((Date.now() - new Date(saved).getTime()) / 60000);
+    const timeStr = mins < 60
+      ? `${mins} minute${mins!==1?'s':''} ago`
+      : `${Math.round(mins/60)} hour${Math.round(mins/60)!==1?'s':''} ago`;
+
+    // Show recovery banner
+    const banner = document.createElement('div');
+    banner.id = 'recovery-banner';
+    banner.style.cssText = [
+      'position:fixed','top:70px','left:50%','transform:translateX(-50%)',
+      'width:calc(100% - 28px)','max-width:472px',
+      'background:#0a1a45','border:2px solid #cc1a2e',
+      'border-radius:12px','padding:14px 16px','z-index:999',
+      'box-shadow:0 8px 28px rgba(0,0,0,.5)'
+    ].join(';');
+    banner.innerHTML = `
+      <div style="font-family:'Oswald',sans-serif;font-size:.7rem;letter-spacing:.1em;
+        text-transform:uppercase;color:#cc1a2e;margin-bottom:6px">
+        ⚠️ Unsaved match found
+      </div>
+      <div style="font-size:.82rem;color:rgba(255,255,255,.8);margin-bottom:12px;line-height:1.5">
+        <strong style="color:white">${saved_active.homeTeam} v ${saved_active.awayTeam}</strong>
+        · ${fmtD(saved_active.date)}<br>
+        ${saved_active.players.length} players · backed up ${timeStr}
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="restoreBackup()" style="flex:1;padding:9px;background:#cc1a2e;
+          color:white;border:none;border-radius:8px;font-family:'Oswald',sans-serif;
+          font-size:.8rem;font-weight:700;letter-spacing:.06em;cursor:pointer">
+          RESTORE MATCH
+        </button>
+        <button onclick="dismissBackup()" style="padding:9px 14px;background:rgba(255,255,255,.1);
+          color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.15);
+          border-radius:8px;font-family:'Oswald',sans-serif;font-size:.75rem;cursor:pointer">
+          Discard
+        </button>
+      </div>`;
+    document.body.appendChild(banner);
+  } catch(e) {
+    console.warn('checkForBackup error:', e);
+  }
+}
+
+function restoreBackup() {
+  try {
+    const raw = localStorage.getItem(BACKUP_KEY);
+    if (!raw) return;
+    const { active: saved_active } = JSON.parse(raw);
+    active = saved_active;
+    document.getElementById('recovery-banner')?.remove();
+    showTab('match');
+    showToast('Match restored ✓ Continue tracking');
+  } catch(e) {
+    showToast('Could not restore — data may be corrupted');
+    clearBackup();
+  }
+}
+
+function dismissBackup() {
+  if (confirm('Are you sure? This will permanently discard the backed-up match data.')) {
+    clearBackup();
+    document.getElementById('recovery-banner')?.remove();
+  }
+}
+
+// ══════════════════════════════════════════════════════
 //  UTILITY FUNCTIONS
 // ══════════════════════════════════════════════════════
 
@@ -1470,6 +1570,10 @@ async function loadProfile() {
 
   // Apply club theme colours (uses defaults if no custom colours set)
   applyTheme(data.clubs);
+
+  // Check if there's an unsaved match from a previous session
+  // Small delay so the UI is fully rendered before the banner appears
+  setTimeout(() => checkForBackup(), 800);
 
   if (data.role === 'admin' || currentUser.email === ADMIN_EMAIL) {
     const adminTab = document.getElementById('tab-admin');
@@ -1977,6 +2081,8 @@ function addStat(pi, stat) {
     document.getElementById(`s-${side}-val`).textContent = active.score[side];
     showToast('Try! Score updated 🏆');
   }
+  // Save to localStorage after every tap — crash protection
+  saveBackup();
 }
 
 function undoLast(pi) {
@@ -2001,6 +2107,7 @@ function adjScore(side, delta) {
   if (!active) return;
   active.score[side] = Math.max(0, active.score[side]+delta);
   document.getElementById(`s-${side}-val`).textContent = active.score[side];
+  saveBackup();
 }
 
 function addSet(type) {
@@ -2109,6 +2216,7 @@ async function doSave() {
   }));
   await sb.from('match_players').insert(playerRows);
 
+  clearBackup();  // Remove backup — data safely in Supabase
   active = null;
   showToast('Match saved! 🏉');
   // Show coaching actions prompt
@@ -2117,8 +2225,10 @@ async function doSave() {
 }
 
 function discardMatch() {
-  if (!confirm('Discard this match?')) return;
-  active = null; showTab('home');
+  if (!confirm('Are you sure? All tracked stats for this match will be permanently lost.')) return;
+  clearBackup();
+  active = null;
+  showTab('home');
 }
 
 // ══════════════════════════════════════════════════════
