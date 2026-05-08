@@ -991,7 +991,7 @@ nav button.active svg{stroke:var(--white)}
         <div class="eb-desc">Download a full JSON backup or restore from one.</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-blue btn-sm" onclick="backupData()">Download Backup</button>
-          <input type="file" id="restore-file" accept=".json" style="display:none" onchange="restoreBackup(this)">
+          <input type="file" id="restore-file" accept=".json" style="display:none" onchange="restoreJsonBackup(this)">
           <button class="btn btn-wht btn-sm" onclick="document.getElementById('restore-file').click()">Restore</button>
         </div>
       </div>
@@ -2292,15 +2292,20 @@ function trackFromFixture(fxId) {
   const fx = fixtures.find(f => f.id === fxId);
   if (!fx) return;
 
-  // Ensure setup section is open so DOM inputs exist
-  const setupBody  = document.getElementById('match-setup-body');
-  const setupLabel = document.getElementById('setup-toggle-label');
-  if (setupBody)  setupBody.style.display  = 'block';
-  if (setupLabel) setupLabel.textContent   = '− Set Up Match Manually';
+  // Navigate to Home tab first — the match setup form
+  // only exists in the Home tab DOM
+  showTab('home');
 
-  // Populate fields, then call startTracking() automatically
-  // so the coach goes straight to the live screen
+  // Use a longer timeout to ensure Home tab is fully
+  // rendered before we try to write to its form fields
   setTimeout(() => {
+    // Open the setup section
+    const setupBody  = document.getElementById('match-setup-body');
+    const setupLabel = document.getElementById('setup-toggle-label');
+    if (setupBody)  setupBody.style.display  = 'block';
+    if (setupLabel) setupLabel.textContent   = '− Set Up Match Manually';
+
+    // Populate form fields from the fixture
     const di = document.getElementById('match-date');
     const ht = document.getElementById('home-team');
     const at = document.getElementById('away-team');
@@ -2311,10 +2316,11 @@ function trackFromFixture(fxId) {
     if (at) at.value = fx.away_team;
     if (ct) ct.value = fx.competition || '';
     if (fp) fp.value = fxId;
-    // All fields set — toggle all squad players on and start
-    // (startTracking will validate and go to live screen)
-    startTracking();
-  }, 80);
+
+    // Small additional delay then start the match —
+    // function is called startMatch() not startTracking()
+    setTimeout(() => startMatch(), 60);
+  }, 120);
 }
 
 async function deleteFixture(id) {
@@ -2824,7 +2830,7 @@ function closeMo(){document.getElementById('mo').classList.remove('show');}
 function openMailto(){const to=document.getElementById('email-to').value.trim(),sub=encodeURIComponent(document.getElementById('email-subj').value),body=encodeURIComponent(emailTxt);window.location.href=`mailto:${to}?subject=${sub}&body=${body}`;}
 function copyRpt(){if(navigator.clipboard){navigator.clipboard.writeText(emailTxt).then(()=>{showToast('Copied ✓');closeMo();});}else{const ta=document.createElement('textarea');ta.value=emailTxt;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);showToast('Copied ✓');closeMo();}}
 function backupData(){dl('rl-tracker-backup.json','application/json',JSON.stringify({matches,roster},null,2));showToast('Backup downloaded ✓');}
-async function restoreBackup(input){
+async function restoreJsonBackup(input){
   const file=input.files[0];if(!file)return;
   const r=new FileReader();
   r.onload=async e=>{try{const d=JSON.parse(e.target.result);showToast('Backup loaded — restore via Supabase dashboard');console.log(d);}catch{showToast('Invalid backup file');}};
