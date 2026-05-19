@@ -5,20 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Gainline RL">
+<meta name="apple-mobile-web-app-title" content="Tackle Bust RL">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0a1a45">
 <!-- Prevents iOS from auto-detecting phone numbers in stats -->
 <meta name="format-detection" content="telephone=no">
-<title>Gainline RL — Rugby League Coaching</title>
+<title>Tackle Bust RL — Rugby League Coaching</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Oswald:wght@400;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
   /* ── Core brand colours — overridable per club in Stage 3 ── */
-  /* These are the Gainline defaults (Sherburn Bears navy + red).
+  /* These are the Tackle Bust defaults (Sherburn Bears navy + red).
      In Stage 3, applyTheme() will overwrite these from the
      club's Supabase profile, instantly repainting the whole app. */
   --primary:#1a3c8f;      /* main brand colour — navs, buttons, headers */
@@ -516,7 +516,21 @@ nav button.active svg{stroke:var(--white)}
 
   <!-- Login -->
   <div class="auth-wrap" id="login-screen">
-    <div class="auth-logo">GAINLINE <span>RL</span></div>
+    <div class="auth-logo">
+        <svg height="52" viewBox="0 0 140 52" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Tackle Bust RL">
+          <text x="0" y="18" font-family="'Barlow Condensed','Oswald',sans-serif" font-weight="800" font-size="20" letter-spacing="3" fill="white">TACKLE</text>
+          <line x1="0" y1="24" x2="11" y2="24" stroke="rgba(255,255,255,.45)" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="14" y1="24" x2="25" y2="24" stroke="rgba(255,255,255,.45)" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="28" y1="24" x2="39" y2="24" stroke="rgba(255,255,255,.45)" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="42" y1="24" x2="53" y2="24" stroke="rgba(255,255,255,.45)" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="56" y1="24" x2="67" y2="24" stroke="rgba(255,255,255,.45)" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="70" y1="24" x2="81" y2="24" stroke="rgba(255,255,255,.45)" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="84" y1="24" x2="95" y2="24" stroke="rgba(255,255,255,.45)" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="99" y1="15" x2="99" y2="33" stroke="rgba(255,255,255,.45)" stroke-width="1.4" stroke-linecap="round"/>
+          <text x="0" y="46" font-family="'Barlow Condensed','Oswald',sans-serif" font-weight="800" font-size="22" letter-spacing="5" fill="#cc1a2e">BUST</text>
+          <text x="107" y="46" font-family="'Barlow Condensed','Oswald',sans-serif" font-weight="700" font-size="13" letter-spacing="2" fill="rgba(255,255,255,.5)">RL</text>
+        </svg>
+      </div>
     <div class="auth-sub">Rugby League Coaching Platform</div>
     <div class="auth-card">
       <div class="auth-title">Sign In</div>
@@ -536,7 +550,21 @@ nav button.active svg{stroke:var(--white)}
 
   <!-- Register -->
   <div class="auth-wrap" id="register-screen" style="display:none">
-    <div class="auth-logo">GAINLINE <span>RL</span></div>
+    <div class="auth-logo">
+        <svg height="52" viewBox="0 0 140 52" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Tackle Bust RL">
+          <text x="0" y="18" font-family="'Barlow Condensed','Oswald',sans-serif" font-weight="800" font-size="20" letter-spacing="3" fill="white">TACKLE</text>
+          <line x1="0" y1="24" x2="11" y2="24" stroke="rgba(255,255,255,.45)" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="14" y1="24" x2="25" y2="24" stroke="rgba(255,255,255,.45)" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="28" y1="24" x2="39" y2="24" stroke="rgba(255,255,255,.45)" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="42" y1="24" x2="53" y2="24" stroke="rgba(255,255,255,.45)" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="56" y1="24" x2="67" y2="24" stroke="rgba(255,255,255,.45)" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="70" y1="24" x2="81" y2="24" stroke="rgba(255,255,255,.45)" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="84" y1="24" x2="95" y2="24" stroke="rgba(255,255,255,.45)" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="99" y1="15" x2="99" y2="33" stroke="rgba(255,255,255,.45)" stroke-width="1.4" stroke-linecap="round"/>
+          <text x="0" y="46" font-family="'Barlow Condensed','Oswald',sans-serif" font-weight="800" font-size="22" letter-spacing="5" fill="#cc1a2e">BUST</text>
+          <text x="107" y="46" font-family="'Barlow Condensed','Oswald',sans-serif" font-weight="700" font-size="13" letter-spacing="2" fill="rgba(255,255,255,.5)">RL</text>
+        </svg>
+      </div>
     <div class="auth-sub">Create Your Account</div>
     <div class="auth-card">
       <div class="auth-title">Create Account</div>
@@ -587,7 +615,21 @@ nav button.active svg{stroke:var(--white)}
 
   <!-- Pending approval -->
   <div class="auth-wrap" id="pending-screen" style="display:none">
-    <div class="auth-logo">GAINLINE <span>RL</span></div>
+    <div class="auth-logo">
+        <svg height="52" viewBox="0 0 140 52" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Tackle Bust RL">
+          <text x="0" y="18" font-family="'Barlow Condensed','Oswald',sans-serif" font-weight="800" font-size="20" letter-spacing="3" fill="white">TACKLE</text>
+          <line x1="0" y1="24" x2="11" y2="24" stroke="rgba(255,255,255,.45)" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="14" y1="24" x2="25" y2="24" stroke="rgba(255,255,255,.45)" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="28" y1="24" x2="39" y2="24" stroke="rgba(255,255,255,.45)" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="42" y1="24" x2="53" y2="24" stroke="rgba(255,255,255,.45)" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="56" y1="24" x2="67" y2="24" stroke="rgba(255,255,255,.45)" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="70" y1="24" x2="81" y2="24" stroke="rgba(255,255,255,.45)" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="84" y1="24" x2="95" y2="24" stroke="rgba(255,255,255,.45)" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="99" y1="15" x2="99" y2="33" stroke="rgba(255,255,255,.45)" stroke-width="1.4" stroke-linecap="round"/>
+          <text x="0" y="46" font-family="'Barlow Condensed','Oswald',sans-serif" font-weight="800" font-size="22" letter-spacing="5" fill="#cc1a2e">BUST</text>
+          <text x="107" y="46" font-family="'Barlow Condensed','Oswald',sans-serif" font-weight="700" font-size="13" letter-spacing="2" fill="rgba(255,255,255,.5)">RL</text>
+        </svg>
+      </div>
     <div class="auth-sub">Rugby League Coaching Platform</div>
     <div class="auth-card" style="text-align:center">
       <div style="font-size:2.8rem;margin-bottom:12px">⏳</div>
@@ -638,33 +680,31 @@ nav button.active svg{stroke:var(--white)}
     <div class="hdr-v-red"></div>
     <div class="hdr-glow"></div>
     <div class="h-inner">
-      <!-- GAINLINE logo — confirmed design: stacked GAIN / dashed 10m line / LINE with scrum marker -->
+      <!-- TACKLE BUST logo -->
       <div class="h-brand" onclick="showTab('home')" style="cursor:pointer">
-        <svg height="38" viewBox="0 0 155 38" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Gainline">
-          <!-- GAIN — white, bold condensed, sits above the line -->
+        <svg height="38" viewBox="0 0 210 38" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Tackle Bust RL">
+          <!-- TACKLE — white, bold, sits above the dashed line -->
           <text x="0" y="15"
             font-family="'Barlow Condensed','Oswald',sans-serif"
             font-weight="800" font-size="15" letter-spacing="2.5"
-            fill="white">GAIN</text>
-          <!-- The 10m dashed line — exact rugby league pitch marking.
-               Dashes run the full width of the wordmark then stop
-               just short of the vertical scrum marker. -->
-          <line x1="0"  y1="19.5" x2="9"  y2="19.5" stroke="rgba(255,255,255,.55)" stroke-width="1.3" stroke-linecap="round"/>
-          <line x1="12" y1="19.5" x2="21" y2="19.5" stroke="rgba(255,255,255,.55)" stroke-width="1.3" stroke-linecap="round"/>
-          <line x1="24" y1="19.5" x2="33" y2="19.5" stroke="rgba(255,255,255,.55)" stroke-width="1.3" stroke-linecap="round"/>
-          <line x1="36" y1="19.5" x2="45" y2="19.5" stroke="rgba(255,255,255,.55)" stroke-width="1.3" stroke-linecap="round"/>
-          <line x1="48" y1="19.5" x2="57" y2="19.5" stroke="rgba(255,255,255,.55)" stroke-width="1.3" stroke-linecap="round"/>
-          <line x1="60" y1="19.5" x2="69" y2="19.5" stroke="rgba(255,255,255,.55)" stroke-width="1.3" stroke-linecap="round"/>
-          <line x1="72" y1="19.5" x2="78" y2="19.5" stroke="rgba(255,255,255,.55)" stroke-width="1.3" stroke-linecap="round"/>
-          <!-- Vertical scrum marker — the perpendicular line that sits at the
-               end of the 10m line on a real pitch. Taller than the dashes so
-               it reads as a distinct structural element. -->
-          <line x1="82" y1="12" x2="82" y2="27" stroke="rgba(255,255,255,.55)" stroke-width="1.3" stroke-linecap="round"/>
-          <!-- LINE — red, slightly larger than GAIN, sits below the line -->
+            fill="white">TACKLE</text>
+          <!-- Dashed pitch line — full width of TACKLE wordmark -->
+          <line x1="0"  y1="19.5" x2="9"  y2="19.5" stroke="rgba(255,255,255,.5)" stroke-width="1.3" stroke-linecap="round"/>
+          <line x1="12" y1="19.5" x2="21" y2="19.5" stroke="rgba(255,255,255,.5)" stroke-width="1.3" stroke-linecap="round"/>
+          <line x1="24" y1="19.5" x2="33" y2="19.5" stroke="rgba(255,255,255,.5)" stroke-width="1.3" stroke-linecap="round"/>
+          <line x1="36" y1="19.5" x2="45" y2="19.5" stroke="rgba(255,255,255,.5)" stroke-width="1.3" stroke-linecap="round"/>
+          <line x1="48" y1="19.5" x2="57" y2="19.5" stroke="rgba(255,255,255,.5)" stroke-width="1.3" stroke-linecap="round"/>
+          <line x1="60" y1="19.5" x2="69" y2="19.5" stroke="rgba(255,255,255,.5)" stroke-width="1.3" stroke-linecap="round"/>
+          <line x1="72" y1="19.5" x2="81" y2="19.5" stroke="rgba(255,255,255,.5)" stroke-width="1.3" stroke-linecap="round"/>
+          <line x1="84" y1="19.5" x2="93" y2="19.5" stroke="rgba(255,255,255,.5)" stroke-width="1.3" stroke-linecap="round"/>
+          <line x1="96" y1="19.5" x2="105" y2="19.5" stroke="rgba(255,255,255,.5)" stroke-width="1.3" stroke-linecap="round"/>
+          <!-- Vertical scrum marker at end of line -->
+          <line x1="109" y1="12" x2="109" y2="27" stroke="rgba(255,255,255,.5)" stroke-width="1.3" stroke-linecap="round"/>
+          <!-- BUST — red, slightly larger, sits below the line -->
           <text x="0" y="35"
             font-family="'Barlow Condensed','Oswald',sans-serif"
             font-weight="800" font-size="16" letter-spacing="4"
-            fill="#cc1a2e">LINE</text>
+            fill="#cc1a2e">BUST</text>
         </svg>
         <!-- Club name sits below the logo, updated on login -->
         <div class="h-club" id="h-club-name"></div>
@@ -731,6 +771,11 @@ nav button.active svg{stroke:var(--white)}
   <!-- HOME -->
   <div class="screen active" id="screen-home">
     <datalist id="club-suggestions"></datalist>
+
+    <!-- SEASON SUMMARY — hidden until matches exist -->
+    <div id="home-season-summary" style="display:none"></div>
+    <!-- SQUAD AVAILABILITY STATUS -->
+    <div id="home-squad-status" style="display:none;font-size:.76rem;padding:0 2px 10px;font-family:'Oswald',sans-serif;letter-spacing:.04em;text-transform:uppercase"></div>
 
     <!-- UPCOMING FIXTURES — primary entry point -->
     <div id="home-fixtures-section"></div>
@@ -1464,7 +1509,7 @@ async function goToCoachingActions() {
 //  accent and a kit_pattern. applyTheme() reads those
 //  values and overwrites the CSS custom properties,
 //  instantly repainting every component in the app.
-//  For now it just applies the Gainline defaults.
+//  For now it just applies the Tackle Bust defaults.
 // ══════════════════════════════════════════════════════
 function applyTheme(club) {
   const root = document.documentElement;
@@ -1867,6 +1912,58 @@ function renderHome() {
     const setupBody  = document.getElementById('match-setup-body');
     const setupLabel = document.getElementById('setup-toggle-label');
 
+    // ── Season summary card ──────────────────────────────────
+    const summaryEl = document.getElementById('home-season-summary');
+    if (summaryEl && matches && matches.length > 0) {
+      const realMatches = matches.filter(m => !m.is_draft);
+      const played  = realMatches.length;
+      const wins    = realMatches.filter(m => (m.score_home ?? 0) > (m.score_away ?? 0)).length;
+      const totalTries    = realMatches.reduce((s,m) => s + (m.match_players||[]).reduce((t,p)=>t+(p.tries||0),0), 0);
+      const totalSetsC    = realMatches.reduce((s,m) => s + (m.sets_complete||0), 0);
+      const totalSetsAll  = realMatches.reduce((s,m) => s + (m.sets_complete||0) + (m.sets_incomplete||0), 0);
+      const setPct  = totalSetsAll ? Math.round((totalSetsC/totalSetsAll)*100) : null;
+      summaryEl.innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:12px">
+          <div style="background:var(--blue-dk);border-radius:var(--r-sm);padding:10px 6px;text-align:center">
+            <div style="font-family:'Oswald',sans-serif;font-size:1.5rem;font-weight:700;color:white;line-height:1">${played}</div>
+            <div style="font-size:.62rem;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.06em;margin-top:3px">Played</div>
+          </div>
+          <div style="background:var(--blue-dk);border-radius:var(--r-sm);padding:10px 6px;text-align:center">
+            <div style="font-family:'Oswald',sans-serif;font-size:1.5rem;font-weight:700;color:#22c55e;line-height:1">${wins}</div>
+            <div style="font-size:.62rem;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.06em;margin-top:3px">Wins</div>
+          </div>
+          <div style="background:var(--blue-dk);border-radius:var(--r-sm);padding:10px 6px;text-align:center">
+            <div style="font-family:'Oswald',sans-serif;font-size:1.5rem;font-weight:700;color:var(--red);line-height:1">${totalTries}</div>
+            <div style="font-size:.62rem;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.06em;margin-top:3px">Tries</div>
+          </div>
+          <div style="background:var(--blue-dk);border-radius:var(--r-sm);padding:10px 6px;text-align:center">
+            <div style="font-family:'Oswald',sans-serif;font-size:1.5rem;font-weight:700;color:${setPct>=70?'#22c55e':setPct>=50?'var(--amber)':'var(--red)'};line-height:1">${setPct!==null?setPct+'%':'—'}</div>
+            <div style="font-size:.62rem;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.06em;margin-top:3px">Sets</div>
+          </div>
+        </div>`;
+      summaryEl.style.display = 'block';
+    } else if (summaryEl) {
+      summaryEl.style.display = 'none';
+    }
+
+    // ── Squad availability summary ───────────────────────────
+    const availEl = document.getElementById('home-squad-status');
+    if (availEl && roster.length > 0) {
+      const avCounts = roster.reduce((acc, p) => {
+        const s = p.availability || 'available';
+        acc[s] = (acc[s] || 0) + 1;
+        return acc;
+      }, {});
+      const parts = [];
+      if (avCounts.available)   parts.push(`<span style="color:#22c55e;font-weight:600">${avCounts.available} available</span>`);
+      if (avCounts.injured)     parts.push(`<span style="color:#f97316;font-weight:600">🤕 ${avCounts.injured} injured</span>`);
+      if (avCounts.unavailable) parts.push(`<span style="color:#ef4444;font-weight:600">✕ ${avCounts.unavailable} unavailable</span>`);
+      availEl.innerHTML = parts.join('<span style="color:var(--grey-lt)"> · </span>');
+      availEl.style.display = 'block';
+    } else if (availEl) {
+      availEl.style.display = 'none';
+    }
+
     // Guard — if any key element is missing, bail gracefully
     if (!section || !setupBody || !setupLabel) {
       console.error('renderHome: missing DOM elements');
@@ -1939,12 +2036,18 @@ function renderHome() {
     if (sl) {
       sl.innerHTML = roster.length === 0
         ? `<div class="empty"><div class="empty-icon">👥</div><p>No players yet.<br><span style="color:var(--blue);cursor:pointer;font-weight:600" onclick="showTab('roster')">Add players in Squad →</span></p></div>`
-        : roster.map((p,i) => `
-          <div class="p-row">
+        : roster.map((p,i) => {
+          const avail = p.availability || 'available';
+          const isOn  = avail === 'available';
+          const statusDot = avail === 'injured'     ? '<span style="font-size:.65rem;margin-left:4px">🤕</span>'
+                          : avail === 'unavailable' ? '<span style="font-size:.65rem;margin-left:4px;color:#ef4444">✕</span>'
+                          : '';
+          return `<div class="p-row">
             <div class="shirt"><span class="shirt-n">${p.shirt_no}</span></div>
-            <span class="p-name">${p.display_name}</span>
-            <button class="tog on" id="tog-${i}" onclick="this.classList.toggle('on')"></button>
-          </div>`).join('');
+            <span class="p-name">${p.display_name}${statusDot}</span>
+            <button class="tog ${isOn?'on':''}" id="tog-${i}" onclick="this.classList.toggle('on')"></button>
+          </div>`;
+        }).join('');
     }
   } catch(e) {
     console.error('renderHome crashed:', e);
@@ -2082,6 +2185,7 @@ function renderMatch() {
 function isSherburn(t) { return /sherburn|bears/i.test(t||''); }
 
 function addStat(pi, stat) {
+  haptic();
   if (!active) return;
   active.players[pi][stat]++;
   lastA[pi] = stat;
@@ -2117,13 +2221,19 @@ function undoLast(pi) {
 }
 
 function adjScore(side, delta) {
+  haptic(delta > 0 ? 30 : 15);
   if (!active) return;
   active.score[side] = Math.max(0, active.score[side]+delta);
   document.getElementById(`s-${side}-val`).textContent = active.score[side];
   saveBackup();
 }
 
+function haptic(ms) {
+  try { navigator.vibrate?.(ms || 30); } catch(e) {}
+}
+
 function addSet(type) {
+  haptic();
   if (!active) return;
   active.sets[type]++;
   updateSetsDisplay();
@@ -2905,7 +3015,7 @@ function buildRpt(m) {
     ca.develop     ? `\n  Areas to Develop:\n  ${ca.develop}`  : null,
     ca.priorities  ? `\n  Training Priorities:\n  ${ca.priorities}` : null,
     (ca.went_well || ca.develop || ca.priorities) ? D : null,
-    `Generated by Gainline · RL Tracker · ${new Date().toLocaleDateString('en-GB')}`,
+    `Generated by Tackle Bust RL · ${new Date().toLocaleDateString('en-GB')}`,
   ];
 
   return sections.filter(s => s !== null).join('\n');
@@ -2977,7 +3087,7 @@ async function generateInvite() {
 
   // Store for share/copy
   window._lastInviteUrl = inviteUrl;
-  window._lastInviteMsg = `Hi! You've been invited to join ${clubName} on Gainline RL — the rugby league coaching app.\n\nClick the link below to set up your account:\n${inviteUrl}\n\nSee you on the pitch! 🏉`;
+  window._lastInviteMsg = `Hi! You've been invited to join ${clubName} on Tackle Bust RL — the rugby league coaching app.\n\nClick the link below to set up your account:\n${inviteUrl}\n\nSee you on the pitch! 🏉`;
 
   document.getElementById('invite-link').textContent = inviteUrl;
   document.getElementById('invite-result').style.display = 'block';
@@ -3289,8 +3399,18 @@ function renderRoster() {
     Enter initials only — max 4 characters. Use the format <strong>N.SH</strong> (first initial, dot, first 2 letters of surname). Examples: <strong>N.SH</strong> for Noah Sharma, <strong>J.HA</strong> for James Harrison, <strong>C</strong> for Charlie (no surname needed).
   </div>`;
 
-  listEl.innerHTML = guide + roster.map((p,i)=>`
-    <div class="rr">
+  listEl.innerHTML = guide + roster.map((p,i) => {
+    const status = p.availability || 'available';
+    const matchCount = (matches||[]).filter(m =>
+      (m.match_players||[]).some(mp => mp.player_id === p.id)
+    ).length;
+    const statusConfig = {
+      available:   { label:'Available',   col:'#22c55e', bg:'rgba(34,197,94,.12)'   },
+      injured:     { label:'Injured',     col:'#f97316', bg:'rgba(249,115,22,.12)'  },
+      unavailable: { label:'Unavailable', col:'#ef4444', bg:'rgba(239,68,68,.12)'   },
+    };
+    const sc = statusConfig[status] || statusConfig.available;
+    return `<div class="rr" style="flex-wrap:wrap;gap:6px">
       <div class="ni-badge" onclick="editShirtNo(${i})" title="Tap to change number"><span>${p.shirt_no}</span></div>
       <div style="flex:1;min-width:0">
         <input class="nmi" type="text" value="${esc(p.display_name)}"
@@ -3299,9 +3419,28 @@ function renderRoster() {
           oninput="roster[${i}].display_name=this.value.toUpperCase().slice(0,4)"
           onblur="checkProfanity(this,'⚠️ Invalid content in player label')">
       </div>
+      <div style="display:flex;align-items:center;gap:6px;width:100%;padding-left:42px;padding-bottom:4px">
+        <button onclick="cycleAvailability(${i})"
+          style="border:none;border-radius:20px;padding:3px 10px;font-size:.7rem;font-weight:600;cursor:pointer;background:${sc.bg};color:${sc.col};font-family:'Oswald',sans-serif;letter-spacing:.04em">
+          ${status==='available'?'✓':status==='injured'?'🤕':'✕'} ${sc.label}
+        </button>
+        ${matchCount > 0 ? `<span style="font-size:.7rem;color:var(--grey-lt)">${matchCount} match${matchCount!==1?'es':''} this season</span>` : ''}
+      </div>
       <button class="del-p" onclick="removePlayer(${i})">✕</button>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
+async function cycleAvailability(i) {
+  const cycle = { available: 'injured', injured: 'unavailable', unavailable: 'available' };
+  const current = roster[i].availability || 'available';
+  roster[i].availability = cycle[current];
+  // Persist immediately to Supabase if player has an id
+  if (roster[i].id) {
+    await sb.from('players').update({ availability: roster[i].availability }).eq('id', roster[i].id);
+  }
+  renderRoster();
+}
+
 function editShirtNo(i) {
   const val = prompt(`Change shirt number for ${roster[i].display_name}:`, roster[i].shirt_no);
   if (!val) return;
@@ -3325,10 +3464,19 @@ async function saveRoster() {
   const toUpdate = roster.filter(p => p.id);
   const toInsert = roster.filter(p => !p.id);
   for (const p of toUpdate) {
-    await sb.from('players').update({ shirt_no: p.shirt_no, display_name: p.display_name }).eq('id', p.id);
+    await sb.from('players').update({
+      shirt_no: p.shirt_no,
+      display_name: p.display_name,
+      availability: p.availability || 'available'
+    }).eq('id', p.id);
   }
   if (toInsert.length) {
-    const rows = toInsert.map(p => ({ club_id: currentProfile.club_id, shirt_no: p.shirt_no, display_name: p.display_name }));
+    const rows = toInsert.map(p => ({
+      club_id: currentProfile.club_id,
+      shirt_no: p.shirt_no,
+      display_name: p.display_name,
+      availability: p.availability || 'available'
+    }));
     const { data } = await sb.from('players').insert(rows).select();
     if (data) data.forEach((d,i) => { const idx = roster.findIndex(r=>!r.id&&r.display_name===d.display_name); if(idx>=0) roster[idx].id=d.id; });
   }
