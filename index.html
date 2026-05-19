@@ -911,7 +911,8 @@ nav button.active svg{stroke:var(--white)}
     </div>
 
     <button class="btn btn-red" onclick="reqSave()" style="margin-top:4px;margin-bottom:10px">💾 Save Match</button>
-    <button class="btn btn-wht" onclick="discardMatch()" style="margin-bottom:24px">✕ Discard &amp; Start Over</button>
+    <button class="btn btn-blue" onclick="saveDraft()" style="margin-bottom:8px">💾 Save Draft (finish awards later)</button>
+  <button class="btn btn-wht" onclick="discardMatch()" style="margin-bottom:24px">✕ Discard &amp; Start Over</button>
   </div>
 
   <!-- FIXTURES -->
@@ -1896,9 +1897,14 @@ function renderHome() {
           <div style="font-family:'Oswald',sans-serif;font-size:.6rem;text-transform:uppercase;letter-spacing:.14em;color:rgba(255,255,255,.5);margin-bottom:6px">Next Match</div>
           <div style="font-family:'Oswald',sans-serif;font-size:1.2rem;font-weight:700;color:white;margin-bottom:3px">${esc(next.home_team)} vs ${esc(next.away_team)}</div>
           <div style="font-size:.78rem;color:rgba(255,255,255,.65);margin-bottom:12px">${daysLabel} &nbsp;·&nbsp; ${fmtD(next.match_date)}${next.competition?' &nbsp;·&nbsp; '+esc(next.competition):''}</div>
-          <button onclick="trackFromFixture('${next.id}')" style="background:var(--red);color:white;border:none;border-radius:var(--r-sm);padding:11px 20px;font-family:'Oswald',sans-serif;font-size:.85rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;box-shadow:0 2px 10px rgba(204,26,46,.4);width:100%">
-            ▶ &nbsp;Start Tracking This Match
-          </button>
+          ${(matches||[]).some(m => m.fixture_id === next.id)
+            ? `<div style="background:rgba(34,197,94,.15);border:1px solid #22c55e;border-radius:var(--r-sm);padding:11px 20px;text-align:center;font-family:'Oswald',sans-serif;font-size:.85rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#22c55e">
+                ✓ &nbsp;Match Tracked — view in History
+               </div>`
+            : `<button onclick="trackFromFixture('${next.id}')" style="background:var(--red);color:white;border:none;border-radius:var(--r-sm);padding:11px 20px;font-family:'Oswald',sans-serif;font-size:.85rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;box-shadow:0 2px 10px rgba(204,26,46,.4);width:100%">
+                ▶ &nbsp;Start Tracking This Match
+               </button>`
+          }
         </div>
         ${upcoming.length > 1 ? `<div style="font-size:.76rem;color:var(--grey-lt);margin-bottom:10px;padding-left:2px">
           ${upcoming.length - 1} more fixture${upcoming.length > 2?'s':''} upcoming —
@@ -2231,6 +2237,51 @@ async function doSave() {
   lastSavedMatchId = match.id;
 }
 
+async function saveDraft() {
+  if (!active) return;
+  // Snapshot current stats/notes but don't require awards
+  syncData();
+  const { data: match, error } = await sb.from('matches').insert({
+    club_id:         currentProfile.club_id,
+    fixture_id:      active.fixture_id,
+    match_date:      active.date,
+    home_team:       active.homeTeam,
+    away_team:       active.awayTeam,
+    score_home:      active.score.home,
+    score_away:      active.score.away,
+    sets_complete:   active.sets.complete,
+    sets_incomplete: active.sets.incomplete,
+    note_defence:    active.notes.def,
+    note_attack:     active.notes.att,
+    note_general:    active.notes.gen,
+    awards:          active.awards,
+    is_draft:        true,
+    created_by:      currentUser.id
+  }).select().single();
+
+  if (error) { showToast('Draft save failed — ' + error.message); return; }
+
+  // Save player stats
+  const playerRows = active.players.map(p => ({
+    match_id:    match.id,
+    player_id:   p.id,
+    display_name: p.name,
+    shirt_no:    p.no,
+    tackles:     p.tackles,
+    hitups:      p.hitups,
+    tries:       p.tries,
+    offloads:    p.offloads,
+    try_assists: p.tryAssists
+  }));
+  await sb.from('match_players').insert(playerRows);
+
+  clearBackup();
+  active = null;
+  lastSavedMatchId = match.id;
+  showToast('Draft saved ✓ — complete awards from History');
+  showTab('history');
+}
+
 function discardMatch() {
   if (!confirm('Are you sure? All tracked stats for this match will be permanently lost.')) return;
   clearBackup();
@@ -2283,7 +2334,11 @@ function fixtureCard(f, isPast) {
       <div class="fx-date">${fmtD(f.match_date)}${f.competition?' · '+f.competition:''}</div>
       <div class="fx-teams">${f.home_team} vs ${f.away_team}</div>
     </div>
-    ${!isPast?`<button class="fx-track" onclick="trackFromFixture('${f.id}')">▶ Track</button>`:'<span class="badge badge-blue" style="flex-shrink:0">Past</span>'}
+    ${!isPast
+      ? (matches||[]).some(m => m.fixture_id === f.id)
+        ? '<span class="badge badge-green" style="flex-shrink:0">✓ Tracked</span>'
+        : `<button class="fx-track" onclick="trackFromFixture('${f.id}')">▶ Track</button>`
+      : '<span class="badge badge-blue" style="flex-shrink:0">Past</span>'}
     <button onclick="deleteFixture('${f.id}')" style="background:none;border:none;color:#ef4444;cursor:pointer;padding:4px;font-size:1rem;flex-shrink:0">✕</button>
   </div>`;
 }
@@ -2461,7 +2516,7 @@ async function renderHistoryScreen() {
         resultColour = us > them ? '#22c55e' : us < them ? '#ef4444' : '#f59e0b';
       }
       h += `<div class="hc" onclick="openDetail(${i})" style="border-left-color:${resultColour}">
-        <div class="hd">${fmtD(m.match_date)}${m.competition?' · '+m.competition:''}</div>
+        <div class="hd">${fmtD(m.match_date)}${m.competition?' · '+m.competition:''}${m.is_draft?' <span class="badge badge-amber" style="font-size:.58rem;vertical-align:middle">Draft</span>':''}</div>
         <div class="ht">${m.home_team} vs ${m.away_team}</div>
         ${m.score_home!=null?`<div class="hscore">${m.score_home} – ${m.score_away}</div>`:''}
         <div class="hs">🛡️${t.tackles} &nbsp;💥${t.hitups} &nbsp;🏆${t.tries} &nbsp;🤝${t.offloads} &nbsp;⭐${t.tryAssists}</div>
@@ -2634,17 +2689,45 @@ async function openDetail(i) {
         <tfoot><tr><td>TOTAL</td><td>${t.tackles}</td><td>${t.hitups}</td><td>${t.tries}</td><td>${t.offloads}</td><td>${t.tryAssists}</td></tr></tfoot>
       </table>
     </div>
-    ${n.note_defence||n.note_attack||n.note_general?`<div class="card"><div class="card-ttl">Coach Notes</div>
-      ${m.note_defence?`<div class="nb"><div class="nl">⚔️ Defence</div><p>${esc(m.note_defence)}</p></div>`:''}
-      ${m.note_attack?`<div class="nb"><div class="nl">⚡ Attack</div><p>${esc(m.note_attack)}</p></div>`:''}
-      ${m.note_general?`<div class="nb"><div class="nl">📝 General</div><p>${esc(m.note_general)}</p></div>`:''}
-    </div>`:''}
-    ${a.opp||a.cch||a.par||a.magic?`<div class="card"><div class="card-ttl">🏅 Match Awards</div>
-      ${a.opp?`<div class="nb" style="border-left-color:#1a5bb5"><div class="nl">🤝 Opposition POTM</div><p>${esc(a.opp)}</p></div>`:''}
-      ${a.cch?`<div class="nb" style="border-left-color:var(--red)"><div class="nl">📋 Coaches POTM</div><p>${esc(a.cch)}</p></div>`:''}
-      ${a.par?`<div class="nb" style="border-left-color:#c07000"><div class="nl">👪 Parents POTM</div><p>${esc(a.par)}</p></div>`:''}
-      ${a.magic?`<div class="nb" style="border-left-color:#2d7a50"><div class="nl">✨ Magic Moment</div><p>${esc(a.magic)}</p></div>`:''}
-    </div>`:''}
+    <div class="card">
+      <div class="card-ttl" style="display:flex;justify-content:space-between;align-items:center">
+        <span>📝 Coach Notes</span>
+        ${m.is_draft?'<span class="badge badge-amber" style="font-size:.6rem">Draft — awards not saved</span>':''}
+      </div>
+      <div class="field" style="margin-bottom:8px">
+        <label style="font-size:.75rem;color:var(--grey-lt)">⚔️ Defence</label>
+        <textarea id="edit-note-def" style="min-height:56px">${esc(m.note_defence||'')}</textarea>
+      </div>
+      <div class="field" style="margin-bottom:8px">
+        <label style="font-size:.75rem;color:var(--grey-lt)">⚡ Attack</label>
+        <textarea id="edit-note-att" style="min-height:56px">${esc(m.note_attack||'')}</textarea>
+      </div>
+      <div class="field" style="margin-bottom:8px">
+        <label style="font-size:.75rem;color:var(--grey-lt)">📋 General</label>
+        <textarea id="edit-note-gen" style="min-height:56px">${esc(m.note_general||'')}</textarea>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-ttl">🏅 Match Awards</div>
+      <div class="field" style="margin-bottom:8px">
+        <label style="font-size:.75rem;color:var(--grey-lt)">🤝 Opposition POTM</label>
+        <input type="text" id="edit-aw-opp" value="${esc(a.opp||'')}" placeholder="Player name or number">
+      </div>
+      <div class="field" style="margin-bottom:8px">
+        <label style="font-size:.75rem;color:var(--grey-lt)">📋 Coaches POTM</label>
+        <input type="text" id="edit-aw-cch" value="${esc(a.cch||'')}" placeholder="Player name or number">
+      </div>
+      <div class="field" style="margin-bottom:8px">
+        <label style="font-size:.75rem;color:var(--grey-lt)">👪 Parents POTM</label>
+        <input type="text" id="edit-aw-par" value="${esc(a.par||'')}" placeholder="Player name or number">
+      </div>
+      <div class="field" style="margin-bottom:12px">
+        <label style="font-size:.75rem;color:var(--grey-lt)">✨ Magic Moment</label>
+        <input type="text" id="edit-aw-magic" value="${esc(a.magic||'')}" placeholder="Describe the moment">
+      </div>
+      <button class="btn btn-blue btn-sm" onclick="saveNotesAndAwards('${m.id}',${i})" style="width:100%">💾 Save Notes &amp; Awards</button>
+    </div>
+
 
     <!-- COACHING ACTIONS -->
     ${locked
@@ -2668,6 +2751,29 @@ async function openDetail(i) {
       <button class="btn btn-blue btn-sm" style="flex:1" onclick="quickEmail(${i})">✉️ Email</button>
       <button class="btn btn-wht btn-sm" style="flex:1" onclick="quickCSVMatch(${i})">📊 CSV</button>
     </div>`;
+}
+
+async function saveNotesAndAwards(matchId, detailIdx) {
+  const updates = {
+    note_defence: document.getElementById('edit-note-def')?.value.trim() || '',
+    note_attack:  document.getElementById('edit-note-att')?.value.trim() || '',
+    note_general: document.getElementById('edit-note-gen')?.value.trim() || '',
+    awards: {
+      opp:   document.getElementById('edit-aw-opp')?.value.trim()   || '',
+      cch:   document.getElementById('edit-aw-cch')?.value.trim()   || '',
+      par:   document.getElementById('edit-aw-par')?.value.trim()   || '',
+      magic: document.getElementById('edit-aw-magic')?.value.trim() || '',
+    },
+    is_draft: false   // Clear draft flag — notes and awards now complete
+  };
+  const { error } = await sb.from('matches').update(updates).eq('id', matchId);
+  if (error) { showToast('Save failed: ' + error.message); return; }
+  showToast('Notes & awards saved ✓');
+  // Reload matches and reopen detail so fields refresh
+  await loadMatches();
+  // Re-render history screen then reopen this match
+  await renderHistoryScreen();
+  openDetail(detailIdx);
 }
 
 async function saveCoachingActions(matchId) {
