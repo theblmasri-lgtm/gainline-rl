@@ -204,7 +204,7 @@ nav button.active svg{stroke:var(--white)}
 .screen.active{display:block}
 #screen-home{background:transparent}
 #screen-history{background:transparent}
-#screen-awards,#screen-export,#screen-roster,#screen-fixtures,#screen-hub,#screen-admin,#screen-match{background:var(--off)}
+#screen-awards,#screen-coaching,#screen-roster,#screen-fixtures,#screen-hub,#screen-admin,#screen-match{background:var(--off)}
 
 /* ── SECTION HEADER ─────────────────────────── */
 .v-hdr{background:linear-gradient(130deg,var(--blue-dk) 0%,var(--blue) 55%,var(--red) 100%);border-radius:var(--r) var(--r) 0 0;padding:10px 14px;font-family:'Oswald',sans-serif;font-size:.7rem;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--white);position:relative;overflow:hidden;margin:-14px -14px 14px}
@@ -743,9 +743,9 @@ nav button.active svg{stroke:var(--white)}
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
       Awards
     </button>
-    <button id="tab-export"   onclick="showTab('export')">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Export
+    <button id="tab-coaching" onclick="showTab('coaching')">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+      Coaching
     </button>
     <button id="tab-hub"      onclick="showTab('hub')">
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/><circle cx="12" cy="7" r="1" fill="currentColor"/></svg>
@@ -801,13 +801,13 @@ nav button.active svg{stroke:var(--white)}
         <div class="field" id="f-home">
           <label>Home Team <span class="tip-icon" onclick="toggleTip('tip-home')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="8.5"/><line x1="12" y1="12" x2="12" y2="16"/></svg></span></label>
           <div class="tip-box" id="tip-home">Start typing your club name and it will appear as a suggestion.</div>
-          <input type="text" id="home-team" list="club-suggestions" autocomplete="off" oninput="checkName(this,'home-warn')">
+          <input type="text" id="home-team" list="club-suggestions" autocomplete="off">
           
           <div class="ferr">Please enter the home team</div>
         </div>
         <div class="field" id="f-away">
           <label>Away Team</label>
-          <input type="text" id="away-team" list="club-suggestions" autocomplete="off" oninput="checkName(this,'away-warn')">
+          <input type="text" id="away-team" list="club-suggestions" autocomplete="off">
           
           <div class="ferr">Please enter the away team</div>
         </div>
@@ -997,50 +997,62 @@ nav button.active svg{stroke:var(--white)}
 
   <!-- HISTORY -->
   <div class="screen" id="screen-history">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:6px">
+      <button onclick="renderHistoryScreen()" style="background:var(--blue);color:white;border:none;border-radius:20px;padding:5px 14px;font-family:'Oswald',sans-serif;font-size:.65rem;font-weight:600;letter-spacing:.06em;cursor:pointer;text-transform:uppercase">↻ Refresh</button>
+    </div>
     <div id="season-stats-banner"></div>
     <div id="history-list"><div class="spinner"><div class="spin-ring"></div>Loading matches…</div></div>
+    <!-- EXPORT — embedded in History tab -->
+    <div id="history-export-panel" style="display:none;margin-top:8px">
+      <div style="font-family:'Oswald',sans-serif;font-size:.62rem;text-transform:uppercase;letter-spacing:.12em;color:var(--grey-lt);margin-bottom:10px;padding-left:2px">Export</div>
+      <div class="eb">
+        <div class="eb-head csv-head"><span class="eb-icon">📊</span><div class="eb-title">Download CSV (Stats Only)</div></div>
+        <div class="eb-body">
+          <div class="eb-desc">Player statistics in spreadsheet format — opens in Excel or Google Sheets.</div>
+          <select id="csv-sel" class="sel-input"></select>
+          <button class="btn btn-blue btn-sm" onclick="downloadCSVSel()">📊 Download CSV</button>
+        </div>
+      </div>
+      <div class="eb">
+        <div class="eb-head" style="background:linear-gradient(125deg,#1a3f2a,#2a7a50)"><span class="eb-icon">📄</span><div class="eb-title">Download Full Report</div></div>
+        <div class="eb-body">
+          <div class="eb-desc">Complete match report including stats, notes, awards and coaching actions.</div>
+          <select id="report-sel" class="sel-input"></select>
+          <button class="btn btn-green btn-sm" onclick="downloadFullReport()">📄 Download Full Report</button>
+        </div>
+      </div>
+      <div class="eb">
+        <div class="eb-head email-head"><span class="eb-icon">✉️</span><div class="eb-title">Email Match Report</div></div>
+        <div class="eb-body">
+          <div class="eb-desc">Downloads match CSV then opens your email app.</div>
+          <select id="email-sel" class="sel-input"></select>
+          <button class="btn btn-red btn-sm" onclick="emailReport()">✉️ Download &amp; Email</button>
+        </div>
+      </div>
+      <div class="eb">
+        <div class="eb-head bk-head"><span class="eb-icon">🔄</span><div class="eb-title">Backup &amp; Restore</div></div>
+        <div class="eb-body">
+          <div class="eb-desc">Download a full JSON backup or restore from one.</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-blue btn-sm" onclick="backupData()">Download Backup</button>
+            <input type="file" id="restore-file" accept=".json" style="display:none" onchange="restoreJsonBackup(this)">
+            <button class="btn btn-wht btn-sm" onclick="document.getElementById('restore-file').click()">Restore</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- AWARDS HISTORY -->
   <div class="screen" id="screen-awards"><div id="awards-list"><div class="spinner"><div class="spin-ring"></div>Loading awards…</div></div></div>
 
-  <!-- EXPORT -->
-  <div class="screen" id="screen-export">
-    <div class="eb">
-      <div class="eb-head csv-head"><span class="eb-icon">📊</span><div class="eb-title">Download CSV (Stats Only)</div></div>
-      <div class="eb-body">
-        <div class="eb-desc">Player statistics in spreadsheet format — opens in Excel or Google Sheets for analysis.</div>
-        <select id="csv-sel" class="sel-input"></select>
-        <button class="btn btn-blue btn-sm" onclick="downloadCSVSel()">📊 Download CSV</button>
-      </div>
-    </div>
-
-    <div class="eb">
-      <div class="eb-head" style="background:linear-gradient(125deg,#1a3f2a,#2a7a50)"><span class="eb-icon">📄</span><div class="eb-title">Download Full Report</div></div>
-      <div class="eb-body">
-        <div class="eb-desc">Complete match report including stats, defence/attack/general notes, all awards and coaching actions — as a text file.</div>
-        <select id="report-sel" class="sel-input"></select>
-        <button class="btn btn-green btn-sm" onclick="downloadFullReport()">📄 Download Full Report</button>
-      </div>
-    </div>
-    <div class="eb">
-      <div class="eb-head email-head"><span class="eb-icon">✉️</span><div class="eb-title">Email Match Report</div></div>
-      <div class="eb-body">
-        <div class="eb-desc">Downloads match CSV then opens your email app.</div>
-        <select id="email-sel" class="sel-input"></select>
-        <button class="btn btn-red btn-sm" onclick="emailReport()">✉️ Download &amp; Email</button>
-      </div>
-    </div>
-    <div class="eb">
-      <div class="eb-head bk-head"><span class="eb-icon">🔄</span><div class="eb-title">Backup &amp; Restore</div></div>
-      <div class="eb-body">
-        <div class="eb-desc">Download a full JSON backup or restore from one.</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn btn-blue btn-sm" onclick="backupData()">Download Backup</button>
-          <input type="file" id="restore-file" accept=".json" style="display:none" onchange="restoreJsonBackup(this)">
-          <button class="btn btn-wht btn-sm" onclick="document.getElementById('restore-file').click()">Restore</button>
-        </div>
-      </div>
+  <!-- COACHING — tactics board coming soon -->
+  <div class="screen" id="screen-coaching">
+    <div class="v-hdr">Coaching</div>
+    <div class="empty" style="padding-top:60px">
+      <div class="empty-icon">📋</div>
+      <p style="font-weight:600;color:var(--text);margin-bottom:8px">Tactics Board</p>
+      <p>This tab is coming soon — a full tactics board, drill library and session planner is on the roadmap.</p>
     </div>
   </div>
 
@@ -1339,136 +1351,14 @@ let lastSavedMatchId = null; // tracks which match to open for coaching actions
 const lastA = {};
 
 // ══════════════════════════════════════════════════════
-//  PROFANITY FILTER
-//  Uses leo-profanity (loaded via CDN) with a normalisation
-//  layer to catch leet-speak substitutions like b1tch, wh0re,
-//  f@ck etc. before checking the word list.
+//  PROFANITY FILTER — disabled
+//  Stubs kept so no call sites need changing.
 // ══════════════════════════════════════════════════════
+function isProfane()              { return false; }
+function checkProfanity()         { return true;  }
+function allFieldsClean()         { return true;  }
+function attachProfanityListeners() {}
 
-// ══════════════════════════════════════════════════════
-//  PROFANITY FILTER — fully self-contained, no CDN needed
-//  Catches plain words AND leet-speak variants (b1tch, wh0re etc.)
-// ══════════════════════════════════════════════════════
-
-// Core blocked word list — stored as root forms, matched as
-// whole words (with word-boundary logic) to avoid false positives
-// on legitimate words that contain these as substrings.
-const BLOCKED_WORDS = new Set([
-  // Common profanities
-  'fuck','fucker','fucking','fucked','fucks','fuckhead','fuckwit',
-  'shit','shite','shitting','shits','bullshit',
-  'cunt','cunts','cunting',
-  'bitch','bitches','bitching',
-  'bastard','bastards',
-  'dick','dicks','dickhead','dickheads',
-  'cock','cocks','cockhead',
-  'prick','pricks',
-  'arse','arsehole','arseholes','ass','asshole','assholes',
-  'twat','twats',
-  'wanker','wankers','wank',
-  'whore','whores',
-  'slut','sluts',
-  'bollocks','bollock',
-  'piss','pisser',
-  'tit','tits','titties',
-  'knob','knobs','knobhead',
-  'minge',
-  'shag','shagging',
-  // Slurs — always blocked regardless of context
-  'nigger','nigga','niga','faggot','fag','chink','spic','kike',
-  'tranny','retard','spastic','mong',
-  // Child safeguarding specific
-  'pedo','paedo','nonce','groomer','kiddie',
-]);
-
-// Leet-speak normalisation: convert common character substitutions
-// back to their letter equivalents before checking the word list.
-// Catches: b1tch → bitch, wh0re → whore, f@ck → fack, $hit → shit
-const LEET = {'@':'a','4':'a','3':'e','1':'i','!':'i','0':'o','$':'s','5':'s','7':'t','+':'t','8':'b','2':'z','9':'g','6':'g'};
-
-function normaliseLeet(str) {
-  return str.toLowerCase().split('').map(c => LEET[c] || c).join('');
-}
-
-// Tokenise: split on anything that isn't a letter and check each token.
-// This handles "fuck!" "fuck." "fuck," and "fuckwit" correctly while
-// NOT matching "Scunthorpe" because 'cunt' won't be an isolated token there.
-// We also check the full normalised string for cases like "fuckhead" written
-// without separation.
-function isProfane(text) {
-  if (!text || !text.trim()) return false;
-
-  const check = (str) => {
-    // Tokenise into words
-    const tokens = str.toLowerCase().split(/[^a-z]+/).filter(Boolean);
-    // Check each token and also check the full string as one unit
-    return tokens.some(t => BLOCKED_WORDS.has(t)) ||
-           // Also check if any blocked word appears anywhere in the full string
-           // as a substring (catches concatenated words like "youfuckingidiot")
-           [...BLOCKED_WORDS].some(w => str.toLowerCase().includes(w));
-  };
-
-  // Run against both the original and leet-normalised versions
-  return check(text) || check(normaliseLeet(text));
-}
-
-// Field-level checker — applies/removes red error state on the element.
-// Returns true if clean, false if profane. Custom error message optional.
-function checkProfanity(el, errorMsg) {
-  if (!el) return true;
-  const val = el.value || '';
-  if (isProfane(val)) {
-    el.style.borderColor = 'var(--red)';
-    el.style.boxShadow   = '0 0 0 3px rgba(204,26,46,.15)';
-    let errEl = el.nextElementSibling;
-    if (!errEl || !errEl.classList.contains('profanity-err')) {
-      errEl = document.createElement('div');
-      errEl.className = 'profanity-err';
-      errEl.style.cssText = 'font-size:.7rem;color:var(--red);margin-top:4px;font-weight:500;display:block';
-      el.after(errEl);
-    }
-    errEl.textContent = errorMsg || '⚠️ This field contains inappropriate language — please review.';
-    errEl.style.display = 'block';
-    return false;
-  } else {
-    el.style.borderColor = '';
-    el.style.boxShadow   = '';
-    const errEl = el.nextElementSibling;
-    if (errEl?.classList.contains('profanity-err')) errEl.style.display = 'none';
-    return true;
-  }
-}
-
-// Bulk validator — checks all match-screen free-text fields at once.
-// Returns true only if ALL are clean. Scrolls to first dirty field.
-function allFieldsClean() {
-  const ids = ['note-def','note-att','note-gen','aw-magic'];
-  let allClean = true, firstDirty = null;
-  ids.forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    if (!checkProfanity(el)) { allClean = false; if (!firstDirty) firstDirty = el; }
-  });
-  if (!allClean && firstDirty) {
-    firstDirty.scrollIntoView({ behavior:'smooth', block:'center' });
-    showToast('⚠️ Please remove inappropriate language before saving');
-  }
-  return allClean;
-}
-
-// Attach blur listeners to live match fields so feedback is immediate.
-// Called at the end of renderMatch().
-function attachProfanityListeners() {
-  ['note-def','note-att','note-gen','aw-magic'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) {
-      // Remove any existing listener before adding to avoid duplicates
-      el.removeEventListener('blur', el._profanityBlur);
-      el._profanityBlur = () => checkProfanity(el);
-      el.addEventListener('blur', el._profanityBlur);
-    }
-  });
-}
 // ══════════════════════════════════════════════════════
 // Each ⓘ icon calls toggleTip(id) — it shows/hides the
 // corresponding .tip-box element. Only one is open at a time.
@@ -1828,55 +1718,12 @@ function showTab(name) {
   if (name==='fixtures') renderFixtures();
   if (name==='history')  renderHistoryScreen();
   if (name==='awards')   renderAwards();
-  if (name==='export')   renderExport();
   if (name==='hub')      renderHub();
   if (name==='roster')   renderRoster();
   if (name==='admin')    renderAdmin();
 }
 
-// ══════════════════════════════════════════════════════
-//  NAME WARNING (GDPR)
-// ══════════════════════════════════════════════════════
-// Known rugby/sports club words that should never trigger the name warning
-const CLUB_WORDS = /bears|bulls|tigers|lions|wolves|hawks|eagles|rovers|rangers|united|city|town|athletic|arlfc|rlfc|afc|fc|rfc|juniors|colts|warriors|dragons|knights|saints|jets|broncos|sharks|eels|roosters|raiders|storm|cowboys|panthers|titans|bulldogs|rabbitohs|wests|south|north|east|west|central|kings|academy|youth|community/i;
-
-function looksLikeFullName(val) {
-  const v = val.trim();
-  // If it contains any known club/team words, it's definitely not a personal name
-  if (CLUB_WORDS.test(v)) return false;
-  // Must be exactly two words, both starting with a capital, each 2-15 chars
-  // This avoids triggering on club names, abbreviations, etc.
-  const personalName = /^[A-Z][a-z]{1,14} [A-Z][a-z]{1,14}$/.test(v);
-  // Double-barrelled surname: Firstname Taylor-Wray
-  const doubleBarrel = /^[A-Z][a-z]{1,14} [A-Z][a-z]+-[A-Z][a-z]+$/.test(v);
-  return personalName || doubleBarrel;
-}
-function checkName(input, warnId) {
-  const warn = document.getElementById(warnId);
-  if (!warn) return;
-  if (looksLikeFullName(input.value)) {
-    warn.classList.add('show');
-    // Hard block — clear the surname part
-    const parts = input.value.trim().split(/[\s-]/);
-    if (parts.length > 1) {
-      showToast('⚠️ Full names not allowed — first name only please');
-      // Don't clear, just warn — let them correct manually
-    }
-  } else {
-    warn.classList.remove('show');
-  }
-}
-function checkPlayerName(input) {
-  const v = input.value.trim();
-  if (looksLikeFullName(v)) {
-    input.style.borderColor = 'var(--red)';
-    input.title = 'Full names not permitted — first name only';
-    showToast('⚠️ Use first name only — no surnames please');
-  } else {
-    input.style.borderColor = '';
-    input.title = '';
-  }
-}
+// NAME WARNING removed — full names now permitted
 
 // ══════════════════════════════════════════════════════
 //  HOME SCREEN
@@ -2600,6 +2447,13 @@ async function renderHistoryScreen() {
             </div>`).join('')}
         </div>
       </div>`;
+  }
+
+  // Show export panel now that matches are loaded
+  const exportPanel = document.getElementById('history-export-panel');
+  if (exportPanel) {
+    exportPanel.style.display = ms.length ? 'block' : 'none';
+    if (ms.length) renderExport();
   }
 
   // ── Match list — latest first ────────────────────
@@ -3394,12 +3248,7 @@ async function deleteHubLink(id) {
 function renderRoster() {
   const listEl = document.getElementById('roster-list');
   // Guidance message at top
-  const guide = `<div style="background:var(--lt-blue);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 13px;margin-bottom:12px;font-size:.79rem;color:var(--grey);line-height:1.6;border-left:3px solid var(--blue)">
-    <strong style="color:var(--blue-dk);font-family:'Oswald',sans-serif;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase">Player Format</strong><br>
-    Enter initials only — max 4 characters. Use the format <strong>N.SH</strong> (first initial, dot, first 2 letters of surname). Examples: <strong>N.SH</strong> for Noah Sharma, <strong>J.HA</strong> for James Harrison, <strong>C</strong> for Charlie (no surname needed).
-  </div>`;
-
-  listEl.innerHTML = guide + roster.map((p,i) => {
+  listEl.innerHTML = roster.map((p,i) => {
     const status = p.availability || 'available';
     const matchCount = (matches||[]).filter(m =>
       (m.match_players||[]).some(mp => mp.player_id === p.id)
@@ -3415,9 +3264,7 @@ function renderRoster() {
       <div style="flex:1;min-width:0">
         <input class="nmi" type="text" value="${esc(p.display_name)}"
           placeholder="e.g. N.SH"
-          maxlength="4"
-          oninput="roster[${i}].display_name=this.value.toUpperCase().slice(0,4)"
-          onblur="checkProfanity(this,'⚠️ Invalid content in player label')">
+          oninput="roster[${i}].display_name=this.value">
       </div>
       <div style="display:flex;align-items:center;gap:6px;width:100%;padding-left:42px;padding-bottom:4px">
         <button onclick="cycleAvailability(${i})"
